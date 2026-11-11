@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'none'">
+<meta name="theme-color" content="#FBF3E6">
+<title>Mishi · Mascota virtual</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0z" fill="currentColor"/><circle cx="9" cy="8.5" r="1.6" fill="currentColor"/><circle cx="12.5" cy="7.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="9" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M12 21c-4.4 0-7-3-7-6.5V9.5a1.5 1.5 0 0 1 3 0V12V5.5a1.5 1.5 0 0 1 3 0V11V4.5a1.5 1.5 0 0 1 3 0V11V6a1.5 1.5 0 0 1 3 0v8.5C17 18 15.8 21 12 21z" fill="currentColor"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M15.5 3.2A8.5 8.5 0 1 0 20.8 15 7 7 0 0 1 15.5 3.2z" fill="currentColor"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.5C9 7 6 10.2 6 14a6 6 0 0 0 12 0c0-3.8-3-7-6-11.5z" fill="currentColor"/><circle cx="18.5" cy="5" r="1.8" fill="currentColor"/></symbol>
+  <symbol id="i-yarn" viewBox="0 0 24 24"><circle cx="11" cy="12" r="8" fill="currentColor"/><path d="M5 9c4 0 9 2 12 7M4.5 13c4-.5 8 1 10.5 5.5M8 4.8c3 2 5 6 5.5 11" stroke="#FBF3E6" stroke-width="1.4" fill="none"/><path d="M18 17c2 1 3 2.5 3 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-fish" viewBox="0 0 24 24"><path d="M3 12c3-4.5 9-5.5 13-2l4-3v10l-4-3c-4 3.5-10 2.5-13-2z" fill="currentColor"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 2 5 13.5h6L9.5 22 19 9.5h-6z" fill="currentColor"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S3 15 3 8.8A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 9 2.2C21 15 12 20.5 12 20.5z" fill="currentColor"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 2c.8 4.6 2.6 6.4 7.2 7.2-4.6.8-6.4 2.6-7.2 7.2-.8-4.6-2.6-6.4-7.2-7.2C9.4 8.4 11.2 6.6 12 2zM18.5 15c.4 2.2 1.3 3.1 3.5 3.5-2.2.4-3.1 1.3-3.5 3.5-.4-2.2-1.3-3.1-3.5-3.5 2.2-.4 3.1-1.3 3.5-3.5z" fill="currentColor"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="5" ry="4.2" fill="currentColor"/><circle cx="6" cy="10.5" r="2.2" fill="currentColor"/><circle cx="9.5" cy="6.5" r="2.2" fill="currentColor"/><circle cx="14.5" cy="6.5" r="2.2" fill="currentColor"/><circle cx="18" cy="10.5" r="2.2" fill="currentColor"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="identity">
+      <h1 class="pet-name" id="cat-name">Mishi</h1>
+      <div class="level-row">
+        <span class="level-badge">Nivel <span id="level">1</span></span>
+        <div class="xp-bar" aria-hidden="true"><span class="bar-fill xp-fill" id="xp-fill"></span></div>
+        <span class="xp-text"><span id="xp">0</span> XP</span>
+      </div>
+    </div>
+    <details class="custom" id="customize">
+      <summary class="icon-btn" aria-label="Personalizar a Mishi"><svg class="icon" aria-hidden="true"><use href="#i-paw"/></svg></summary>
+      <div class="custom-panel" role="group" aria-label="Personalización">
+        <label class="field">Nombre
+          <input id="name" type="text" maxlength="16" autocomplete="off" spellcheck="false" enterkeyhint="done">
+        </label>
+        <label class="field">Pelaje
+          <select id="coat">
+            <option value="naranja">Naranja</option>
+            <option value="gris">Gris perla</option>
+            <option value="crema">Crema</option>
+            <option value="negro">Carbón (nivel 2)</option>
+            <option value="chocolate">Chocolate (nivel 3)</option>
+            <option value="nieve">Nieve (nivel 4)</option>
+          </select>
+        </label>
+        <label class="field">Patrón
+          <select id="pattern">
+            <option value="liso">Liso</option>
+            <option value="atigrado">Atigrado</option>
+            <option value="manchas">Manchas (nivel 2)</option>
+            <option value="calcetines">Calcetines (nivel 3)</option>
+          </select>
+        </label>
+        <label class="switch"><input id="sound" type="checkbox" role="switch" aria-checked="false"> Sonido</label>
+        <label class="switch"><input id="reduce-motion" type="checkbox"> Reducir animaciones</label>
+      </div>
+    </details>
+  </header>
+
+  <section class="stats" aria-label="Estado">
+    <div class="stat" data-stat="hunger"><svg class="stat-icon" aria-hidden="true"><use href="#i-fish"/></svg><div class="stat-body"><div class="stat-head"><span class="stat-label">Saciedad</span><span class="stat-value" id="stat-hunger">80%</span></div><div class="bar" aria-hidden="true"><span class="bar-fill"></span></div></div></div>
+    <div class="stat" data-stat="energy"><svg class="stat-icon" aria-hidden="true"><use href="#i-bolt"/></svg><div class="stat-body"><div class="stat-head"><span class="stat-label">Energía</span><span class="stat-value" id="stat-energy">85%</span></div><div class="bar" aria-hidden="true"><span class="bar-fill"></span></div></div></div>
+    <div class="stat" data-stat="mood"><svg class="stat-icon" aria-hidden="true"><use href="#i-heart"/></svg><div class="stat-body"><div class="stat-head"><span class="stat-label">Ánimo</span><span class="stat-value" id="stat-mood">75%</span></div><div class="bar" aria-hidden="true"><span class="bar-fill"></span></div></div></div>
+    <div class="stat" data-stat="hygiene"><svg class="stat-icon" aria-hidden="true"><use href="#i-sparkle"/></svg><div class="stat-body"><div class="stat-head"><span class="stat-label">Higiene</span><span class="stat-value" id="stat-cleanliness">90%</span></div><div class="bar" aria-hidden="true"><span class="bar-fill"></span></div></div></div>
+  </section>
+
+  <main class="room" id="room">
+    <svg class="scene" viewBox="0 0 360 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="wallG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8ECD8"/><stop offset="1" stop-color="#F0DDC1"/></linearGradient>
+        <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D7A178"/><stop offset="1" stop-color="#C2845A"/></linearGradient>
+        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BCD8D9"/><stop offset="1" stop-color="#F5E6C6"/></linearGradient>
+        <linearGradient id="nightG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2D3756"/><stop offset="1" stop-color="#5B5E80"/></linearGradient>
+        <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1.4" fill="#E4CBA7"/></pattern>
+      </defs>
+      <rect width="360" height="270" fill="url(#wallG)"/>
+      <rect width="360" height="270" fill="url(#dots)"/>
+      <rect y="262" width="360" height="10" fill="#E6CFAF"/>
+      <rect y="270" width="360" height="130" fill="url(#floorG)"/>
+      <path d="M0 305H360M0 342H360M0 380H360M80 270V305M210 305V342M120 342V380M290 270V305M260 342V380" stroke="#A86E47" stroke-opacity=".35" stroke-width="2"/>
+      <rect x="40" y="58" width="76" height="58" rx="4" fill="#FFF8EC" stroke="#B5573D" stroke-width="4"/>
+      <path d="M46 110l20-24 14 14 10-10 20 20z" fill="#8BA888"/><circle cx="98" cy="74" r="6" fill="#E9B65E"/>
+      <rect x="28" y="150" width="104" height="6" rx="2" fill="#B97A50"/>
+      <rect x="40" y="124" width="10" height="26" rx="2" fill="#B5573D"/><rect x="52" y="128" width="9" height="22" rx="2" fill="#8BA888"/><rect x="63" y="122" width="11" height="28" rx="2" fill="#E3B26C"/><rect x="78" y="134" width="22" height="16" rx="3" fill="#6F8F6C" transform="rotate(-8 89 142)"/>
+      <path d="M206 32q12 64-2 130h18q10-66 0-130z" fill="#8BA888"/><path d="M334 32q-12 64 2 130h-18q-10-66 0-130z" fill="#8BA888"/>
+      <rect x="216" y="40" width="108" height="112" rx="8" fill="#FFF8EC" stroke="#C9A47E" stroke-width="3"/>
+      <g class="sky-day"><rect x="222" y="46" width="96" height="100" rx="5" fill="url(#skyG)"/><circle cx="296" cy="74" r="12" fill="#F2C266"/><g class="cloud"><ellipse cx="248" cy="96" rx="16" ry="7" fill="#FFF"/><ellipse cx="258" cy="91" rx="10" ry="8" fill="#FFF"/></g></g>
+      <g class="sky-night"><rect x="222" y="46" width="96" height="100" rx="5" fill="url(#nightG)"/><path d="M290 62a15 15 0 1 0 16 22 12 12 0 1 1-16-22z" fill="#F4E8C8"/><circle cx="244" cy="70" r="1.6" fill="#FFF"/><circle cx="262" cy="112" r="1.3" fill="#FFF"/><circle cx="236" cy="128" r="1.5" fill="#FFF"/></g>
+      <rect x="268" y="46" width="4" height="100" fill="#C9A47E"/><rect x="222" y="94" width="96" height="4" fill="#C9A47E"/>
+      <rect x="208" y="150" width="124" height="9" rx="3" fill="#E0C29B"/>
+      <path d="M232 150h18l-3-14h-12z" fill="#B5573D"/><path d="M241 136c-6-8-10-14-4-20 2 6 6 9 4 20zM241 136c6-9 12-11 14-7-5 1-9 4-14 7z" fill="#6F8F6C"/>
+      <path d="M24 300h46l-6 44H30z" fill="#B5573D"/><rect x="20" y="294" width="54" height="9" rx="3" fill="#9E4A33"/>
+      <g fill="#7E9F7A"><ellipse cx="38" cy="270" rx="9" ry="24" transform="rotate(-25 38 270)"/><ellipse cx="56" cy="264" rx="9" ry="28" transform="rotate(18 56 264)"/><ellipse cx="47" cy="258" rx="8" ry="30"/></g>
+      <ellipse cx="182" cy="352" rx="150" ry="32" fill="#9DB59A"/><ellipse cx="182" cy="352" rx="128" ry="24" fill="none" stroke="#EAF0E2" stroke-width="2" stroke-dasharray="6 6"/>
+      <ellipse cx="305" cy="372" rx="30" ry="6" fill="#3B2A22" opacity=".15"/>
+      <path d="M279 352h52q-2 20-26 20t-26-20z" fill="#B5573D"/><ellipse cx="305" cy="352" rx="26" ry="6" fill="#8F3F2A"/>
+      <g class="food"><circle cx="296" cy="349" r="3.4" fill="#C98B4A"/><circle cx="304" cy="347" r="3.4" fill="#B97A3C"/><circle cx="312" cy="349" r="3.4" fill="#C98B4A"/><circle cx="300" cy="352" r="3" fill="#A86E35"/><circle cx="309" cy="352" r="3" fill="#B97A3C"/></g>
+      <g><circle cx="74" cy="368" r="12" fill="#D96C5A"/><path d="M64 362c6 0 13 3 18 10M63 368c6 0 12 2 16 9M70 357c4 3 7 8 8 14" stroke="#F6D0C4" stroke-width="1.5" fill="none"/><path d="M85 372c10 4 16 2 22 6" stroke="#D96C5A" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+      <rect class="night-shade" width="360" height="400" fill="#1E2140"/>
+    </svg>
+
+    <button id="cat" class="cat coat-naranja pattern-atigrado" type="button" aria-label="Acariciar a Mishi">
+      <svg class="cat-svg" viewBox="100 90 200 260" aria-hidden="true" focusable="false">
+        <ellipse cx="178" cy="342" rx="74" ry="10" fill="#3B2A22" opacity=".18"/>
+        <g class="cat-tail"><path class="fur-stroke" d="M224 326C274 330 294 290 278 246C272 232 260 236 264 250" stroke-width="20" fill="none" stroke-linecap="round"/><path class="pat-atigrado stripe" d="M262 318l8 6M280 292l9 2M283 266l9-1"/></g>
+        <g class="cat-body">
+          <path class="fur outline" d="M118 338C106 300 116 248 150 232C166 225 190 225 206 232C240 248 250 300 238 338Z"/>
+          <path class="fur-light" d="M154 338C148 300 158 262 178 260C198 262 208 300 202 338Z"/>
+          <path class="pat-atigrado stripe" d="M124 296q12-5 20 4M122 316q13-5 21 4M232 296q-12-5-20 4M234 316q-13-5-21 4"/>
+          <g class="pat-manchas fur-dark"><ellipse cx="140" cy="272" rx="14" ry="10"/><ellipse cx="220" cy="300" rx="11" ry="15"/></g>
+          <ellipse class="fur outline" cx="160" cy="338" rx="17" ry="9"/><ellipse class="fur outline" cx="198" cy="338" rx="17" ry="9"/>
+          <g class="pat-calcetines sock"><ellipse cx="160" cy="338" rx="16" ry="8"/><ellipse cx="198" cy="338" rx="16" ry="8"/></g>
+          <path class="toe" d="M155 342v-5M165 342v-5M193 342v-5M203 342v-5"/>
+          <g class="dirt"><ellipse cx="138" cy="312" rx="9" ry="6"/><ellipse cx="214" cy="322" rx="7" ry="5"/><ellipse cx="196" cy="337" rx="6" ry="4"/></g>
+        </g>
+        <g class="cat-head">
+          <path class="fur outline" d="M130 168L136 104L172 140Z"/><path class="ear-in" d="M139 154L142 118L163 140Z"/>
+          <path class="fur outline" d="M226 168L220 104L184 140Z"/><path class="ear-in" d="M217 154L214 118L193 140Z"/>
+          <ellipse class="fur outline" cx="178" cy="182" rx="62" ry="52"/>
+          <path class="pat-atigrado stripe" d="M170 136l2 16M178 133v18M186 136l-2 16M118 184h14M120 196h11M238 184h-14M236 196h-11"/>
+          <ellipse class="pat-manchas fur-dark" cx="205" cy="152" rx="16" ry="12"/>
+          <g class="eyes-open"><ellipse class="iris" cx="156" cy="180" rx="10" ry="12"/><ellipse cx="156" cy="181" rx="4" ry="9" fill="#231A16"/><circle cx="159" cy="175" r="3" fill="#FFF"/><ellipse class="iris" cx="200" cy="180" rx="10" ry="12"/><ellipse cx="200" cy="181" rx="4" ry="9" fill="#231A16"/><circle cx="203" cy="175" r="3" fill="#FFF"/></g>
+          <path class="eyes-closed line" d="M146 182q10 8 20 0M190 182q10 8 20 0"/>
+          <path class="eyes-happy line" d="M146 184q10-12 20 0M190 184q10-12 20 0"/>
+          <ellipse class="fur-light" cx="170" cy="204" rx="13" ry="10"/><ellipse class="fur-light" cx="186" cy="204" rx="13" ry="10"/>
+          <ellipse class="blush" cx="140" cy="203" rx="9" ry="5"/><ellipse class="blush" cx="216" cy="203" rx="9" ry="5"/>
+          <path d="M172 194h12l-6 7z" fill="#D9786E" stroke="#D9786E" stroke-width="2" stroke-linejoin="round"/>
+          <path class="mouth line" d="M178 201v4M178 205q-5 6-11 3M178 205q5 6 11 3"/>
+          <path class="whisker" d="M150 204l-40-8M150 209l-42 1M150 214l-38 8M206 204l40-8M206 209l42 1M206 214l38 8"/>
+          <g class="dirt"><ellipse cx="206" cy="160" rx="7" ry="5"/><ellipse cx="146" cy="216" rx="5" ry="3.5"/></g>
+        </g>
+        <g class="zzz"><text x="236" y="130">Z</text><text x="252" y="110">Z</text><text x="268" y="90">Z</text></g>
+        <g class="bubbles"><circle cx="128" cy="280" r="9"/><circle cx="232" cy="262" r="7"/><circle cx="150" cy="232" r="6"/><circle cx="214" cy="318" r="10"/><circle cx="182" cy="140" r="5"/></g>
+      </svg>
+    </button>
+    <p class="hint" id="message" role="status" aria-live="polite">Toca a Mishi para acariciarlo.</p>
+  </main>
+
+  <nav class="actions" aria-label="Acciones">
+    <button class="action" id="pet" type="button"><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg><span class="action-label">Acariciar</span></button>
+    <button class="action" id="feed" type="button"><svg class="icon" aria-hidden="true"><use href="#i-bowl"/></svg><span class="action-label">Alimentar</span></button>
+    <button class="action" id="sleep" type="button"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg><span class="action-label">Dormir</span></button>
+    <button class="action" id="clean" type="button"><svg class="icon" aria-hidden="true"><use href="#i-drop"/></svg><span class="action-label">Limpiar</span></button>
+    <button class="action action-primary" id="play" type="button"><svg class="icon" aria-hidden="true"><use href="#i-yarn"/></svg><span class="action-label">Jugar</span></button>
+  </nav>
+</div>
+
+<section class="game" id="game" role="dialog" aria-modal="true" aria-labelledby="game-title" hidden>
+  <div class="game-hud">
+    <h2 class="game-title" id="game-title">Atrapa el ovillo</h2>
+    <div class="hud-item"><span class="hud-label">Puntos</span><span class="hud-value" id="game-score" aria-live="polite">0</span></div>
+    <div class="hud-item"><span class="hud-label">Tiempo</span><span class="hud-value"><span id="game-time">20</span> s</span></div>
+    <button class="icon-btn" id="game-close" type="button" aria-label="Cerrar minijuego"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+  </div>
+  <div class="timer-bar" aria-hidden="true"><span class="bar-fill" id="game-timer-fill"></span></div>
+  <div class="playfield" id="game-field">
+    <button class="toy" id="game-target" type="button" aria-label="Atrapar el ovillo"><svg class="toy-svg" aria-hidden="true"><use href="#i-yarn"/></svg></button>
+    <div class="game-result" id="game-result" hidden>
+      <h3 id="game-result-title">¡Bien hecho!</h3>
+      <p id="game-result-text"></p>
+    </div>
+  </div>
+</section>
+
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

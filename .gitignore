@@ -1,0 +1,11 @@
+build/
+dist/
+node_modules/
+*.jks
+*.keystore
+*.pem
+*.key
+*.idsig
+local.properties
+.env*
+__pycache__/

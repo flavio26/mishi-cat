@@ -3,9 +3,10 @@
 ## Aplicación
 
 - Identificador: `com.flavio26.mishi`.
-- Versión: `1.0.0`, código `1`.
+- Versión: `1.1.0`, código `2`.
 - Android mínimo: API 26; objetivo: API 35.
 - Una Activity Java muestra los recursos de `assets/` en una WebView.
+- `model.js` contiene el estado y las reglas; `behavior.js` solo anima: paseo por la habitación, reacciones a cuidados y llamada tocando el suelo. No modifica estadísticas.
 - El origen `https://mishi.local` es interno y se resuelve mediante `shouldInterceptRequest`: no existe servidor ni conexión a ese dominio.
 - El manifiesto no solicita permisos. La WebView bloquea red, archivos, contenido externo y navegación fuera del juego.
 - No se expone un puente `addJavascriptInterface`.

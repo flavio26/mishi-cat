@@ -9,9 +9,10 @@ assert not manifest.findall('uses-permission')
 assert manifest.find('uses-sdk').attrib[ns+'minSdkVersion']=='26'
 assert manifest.find('application').attrib.get(ns+'debuggable','false')=='false'
 assert manifest.find('application').attrib.get(ns+'allowBackup')=='false'
-with zipfile.ZipFile(root/'dist/Mishi-1.0.0.apk') as z:
+version=manifest.attrib[ns+'versionName']
+with zipfile.ZipFile(root/f'dist/Mishi-{version}.apk') as z:
  names=z.namelist()
- for required in ['AndroidManifest.xml','classes.dex','resources.arsc','assets/index.html','assets/app.js','assets/model.js','assets/style.css']:
+ for required in ['AndroidManifest.xml','classes.dex','resources.arsc','assets/index.html','assets/app.js','assets/model.js','assets/behavior.js','assets/style.css']:
   assert required in names,required
  assert not any(re.search(r'\.(jks|keystore|pem|key)$',n) for n in names)
  for n in names:

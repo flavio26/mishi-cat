@@ -6,7 +6,10 @@
   let state;
   try { state=M.tick(M.deserialize(localStorage.getItem(KEY),Date.now()).state,Date.now(),{offline:true}).state; }
   catch (_) { state=M.createDefaultState(Date.now()); }
-  let gameTimer=null, seconds=20, score=0, gameId=null, audio=null, lastPet=0, soundOn=false;
+  let gameTimer=null, seconds=20, score=0, gameId=null, audio=null, lastPet=0, soundOn=false, sleepPending=false;
+  const motionQuery=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
+  const reduced=()=>Boolean(state.settings.reducedMotion||motionQuery?.matches);
+  const B=window.MishiBehavior&&$('cat')&&$('room')?window.MishiBehavior.create({cat:$('cat'),room:$('room'),figure:$('cat-figure'),fx:$('fx'),yarn:document.querySelector('.scene-yarn'),reduced,isBusy:()=>gameId!==null||sleepPending,stats:()=>state.stats,name:()=>state.name,say}):null;
   const save=()=>{try {localStorage.setItem(KEY,M.serialize(state));} catch (_) { /* private storage unavailable */ }};
   function say(text){const el=$('message');if(el)el.textContent=text;}
   function sound(freq=450) {
@@ -49,13 +52,24 @@
     state=result.state;say(message);render();save();if(frequency)sound(frequency);return true;
   }
   function doAction(action){
+    if(sleepPending)return false;
     const now=Date.now();state=M.tick(state,now).state;
+    const wasSleeping=state.sleeping;
+    if(action==='sleep'&&!wasSleeping&&B&&!reduced()){
+      const check=M.toggleSleep(state,now);
+      if(!check.ok){say(reasons[check.reason]||'Ahora no se puede.');return false;}
+      sleepPending=true;say(state.name+' busca su sitio en la alfombra…');
+      B.react('sleep',()=>{sleepPending=false;const t=Date.now();state=M.tick(state,t).state;if(!state.sleeping)apply(M.toggleSleep(state,t),'A dormir. Volverá con más energía.',520);});
+      return true;
+    }
     const result=action==='sleep'?M.toggleSleep(state,now):M[action](state,now);
-    const messages={feed:'¡Qué rico! Ya tiene la barriguita llena.',pet:'Ronronea. Le encanta estar contigo.',clean:'¡Pelito limpio y suave!',sleep:state.sleeping?'Ya está despierto y listo para jugar.':'A dormir. Volverá con más energía.'};
-    return apply(result,messages[action],action==='pet'?320:520);
+    const messages={feed:'¡Qué rico! Va corriendo a su cuenco.',pet:'Ronronea. Le encanta estar contigo.',clean:'¡Pelito limpio y suave!',sleep:wasSleeping?'Ya está despierto y listo para jugar.':'A dormir. Volverá con más energía.'};
+    const ok=apply(result,messages[action],action==='pet'?320:520);
+    if(ok&&B)B.react(action==='sleep'?(wasSleeping?'wake':'sleep'):action);
+    return ok;
   }
   function closeGame(abort=true){if(gameTimer){clearInterval(gameTimer);gameTimer=null;}if(abort&&gameId!==null){const result=M.abortGame(state,gameId);if(result.ok){state=result.state;save();}}gameId=null;if($('game'))$('game').hidden=true;}
-  function endGame(){if(gameId===null)return;const result=M.finishGame(state,gameId,score);closeGame(false);apply(result,'¡Atrapaste el juguete '+score+' veces! '+state.name+' está feliz.',660);}
+  function endGame(){if(gameId===null)return;const result=M.finishGame(state,gameId,score);closeGame(false);if(apply(result,'¡Atrapaste el juguete '+score+' veces! '+state.name+' está feliz.',660)&&B)B.react('celebrate');}
   function moveTarget(){const el=$('game-target');if(!el)return;el.style.left=(12+Math.random()*66)+'%';el.style.top=(12+Math.random()*63)+'%';}
   function startGame(){
     if(gameId!==null)return;
@@ -69,6 +83,12 @@
   for (const action of ['feed','pet','sleep','clean']) $(action)?.addEventListener('click',()=>doAction(action));
   $('cat')?.addEventListener('click',()=>{if(Date.now()-lastPet<600)return;lastPet=Date.now();if(doAction('pet')){$('cat').classList.remove('petted');void $('cat').offsetWidth;$('cat').classList.add('petted');}});
   $('play')?.addEventListener('click',startGame);
+  $('room')?.addEventListener('click',e=>{
+    if(!B||e.target.closest('#cat'))return;
+    if(state.sleeping){say('Shh… '+state.name+' está durmiendo.');return;}
+    if(sleepPending)return;
+    B.call(e.clientX,e.clientY);say(state.name+' viene hacia ti.');
+  });
   $('game-target')?.addEventListener('click',()=>{if(gameId===null)return;score++;$('game-score').textContent=String(score);sound(610+score*20);moveTarget();});
   $('game-close')?.addEventListener('click',()=>{closeGame();say('Guardamos el juguete para otro rato.');$('play').focus();});
   $('name')?.addEventListener('change',e=>apply(M.rename(state,e.target.value),'Ahora se llama '+e.target.value.trim().slice(0,16)+'.'));
@@ -76,13 +96,15 @@
   $('pattern')?.addEventListener('change',e=>apply(M.setPattern(state,e.target.value),'¡Nuevo estampado para '+state.name+'!'));
   $('reduce-motion')?.addEventListener('change',e=>apply(M.setReducedMotion(state,e.target.checked),'Preferencia de animación guardada.'));
   $('sound')?.addEventListener('change',e=>{soundOn=e.target.checked;render();if(soundOn)sound(580);else if(audio){audio.close();audio=null;}});
-  function pause(){if(gameId!==null){closeGame();say('El juego se ha pausado. Vuelve a jugar cuando quieras.');}save();if(audio){audio.close();audio=null;}}
+  function pause(){B?.stop();if(gameId!==null){closeGame();say('El juego se ha pausado. Vuelve a jugar cuando quieras.');}save();if(audio){audio.close();audio=null;}}
   window.addEventListener('mishi-pause',pause);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else resume();});
-  function resume(){state=M.tick(state,Date.now(),{offline:true}).state;render();save();}
+  function resume(){state=M.tick(state,Date.now(),{offline:true}).state;render();save();if(B){B.layout();B.start();}}
   window.addEventListener('mishi-resume',resume);
   window.addEventListener('mishi-back',e=>{if(gameId!==null){e.preventDefault();closeGame();$('play').focus();}else if($('customize')?.open){e.preventDefault();$('customize').open=false;}});
   window.addEventListener('pagehide',pause);
   setInterval(()=>{if(!document.hidden){state=M.tick(state,Date.now()).state;render();save();}},30000);
+  window.addEventListener('resize',()=>B?.layout());
   render();save();
+  if(B){B.layout();B.start();}
 })();

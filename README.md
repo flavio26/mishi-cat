@@ -1,6 +1,6 @@
 # Mishi · tu gato de bolsillo
 
-Mascota virtual para Android, en español. Un pequeño compañero al que acariciar, alimentar, limpiar y acompañar mientras duerme. Incluye un minijuego de atrapar el juguete, niveles, nombre y pelaje personalizables.
+Mascota virtual para Android, en español. Un pequeño compañero al que acariciar, alimentar, limpiar y acompañar mientras duerme. Mishi pasea solo por la habitación, va a su cuenco cuando le das de comer, ronronea con corazones al acariciarlo, busca la alfombra para dormir y juega con el ovillo. Toca el suelo y vendrá hacia ti. Incluye un minijuego de atrapar el juguete, niveles, nombre y pelaje personalizables.
 
 ## Android
 
@@ -42,7 +42,7 @@ Crea tu clave privada con `keytool -genkeypair`, alias `mishi`, algoritmo RSA, 3
 python scripts/build.py
 ```
 
-Resultado: `dist/Mishi-1.0.0.apk` y `dist/SHA256SUMS.txt`. El script verifica firma, alineación y metadatos antes de terminar.
+Resultado: `dist/Mishi-1.1.0.apk` y `dist/SHA256SUMS.txt`. El script verifica firma, alineación y metadatos antes de terminar.
 
 ## Privacidad
 

@@ -14,7 +14,7 @@ JAVA = Path(os.environ['JAVA_HOME']) / 'bin'
 TOOLS = Path(os.environ['ANDROID_BUILD_TOOLS'])
 ANDROID = Path(os.environ['ANDROID_JAR'])
 KEY = Path(os.environ['MISHI_KEYSTORE'])
-required_assets = ['index.html', 'style.css', 'model.js', 'app.js']
+required_assets = ['index.html', 'style.css', 'model.js', 'behavior.js', 'app.js']
 if not all((SRC/'assets'/name).is_file() for name in required_assets):
     sys.exit('Missing required UI assets; refusing to build an incomplete APK.')
 if not os.environ.get('MISHI_STORE_PASS') or not KEY.exists():
@@ -39,7 +39,9 @@ run(JAVA/('java'+exe), '-cp', TOOLS/'lib/d8.jar', 'com.android.tools.r8.D8',
 with zipfile.ZipFile(BUILD/'base.apk', 'a', zipfile.ZIP_DEFLATED) as apk:
     for dex in (BUILD/'dex').glob('*.dex'): apk.write(dex, dex.name)
 run(TOOLS/('zipalign'+exe), '-f', '4', BUILD/'base.apk', BUILD/'aligned.apk')
-output = DIST/'Mishi-1.0.0.apk'
+import re
+VERSION = re.search(r'versionName="([^"]+)"', (SRC/'AndroidManifest.xml').read_text(encoding='utf-8')).group(1)
+output = DIST/f'Mishi-{VERSION}.apk'
 run(JAVA/('java'+exe), '-jar', TOOLS/'lib/apksigner.jar', 'sign',
     '--ks', KEY, '--ks-key-alias', 'mishi', '--ks-pass', 'env:MISHI_STORE_PASS',
     '--key-pass', 'env:MISHI_STORE_PASS', '--out', output, BUILD/'aligned.apk')

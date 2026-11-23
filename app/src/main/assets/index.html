@@ -101,45 +101,50 @@
       <ellipse cx="305" cy="372" rx="30" ry="6" fill="#3B2A22" opacity=".15"/>
       <path d="M279 352h52q-2 20-26 20t-26-20z" fill="#B5573D"/><ellipse cx="305" cy="352" rx="26" ry="6" fill="#8F3F2A"/>
       <g class="food"><circle cx="296" cy="349" r="3.4" fill="#C98B4A"/><circle cx="304" cy="347" r="3.4" fill="#B97A3C"/><circle cx="312" cy="349" r="3.4" fill="#C98B4A"/><circle cx="300" cy="352" r="3" fill="#A86E35"/><circle cx="309" cy="352" r="3" fill="#B97A3C"/></g>
-      <g><circle cx="74" cy="368" r="12" fill="#D96C5A"/><path d="M64 362c6 0 13 3 18 10M63 368c6 0 12 2 16 9M70 357c4 3 7 8 8 14" stroke="#F6D0C4" stroke-width="1.5" fill="none"/><path d="M85 372c10 4 16 2 22 6" stroke="#D96C5A" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+      <g class="scene-yarn"><circle cx="74" cy="368" r="12" fill="#D96C5A"/><path d="M64 362c6 0 13 3 18 10M63 368c6 0 12 2 16 9M70 357c4 3 7 8 8 14" stroke="#F6D0C4" stroke-width="1.5" fill="none"/><path d="M85 372c10 4 16 2 22 6" stroke="#D96C5A" stroke-width="2" fill="none" stroke-linecap="round"/></g>
       <rect class="night-shade" width="360" height="400" fill="#1E2140"/>
     </svg>
 
     <button id="cat" class="cat coat-naranja pattern-atigrado" type="button" aria-label="Acariciar a Mishi">
       <svg class="cat-svg" viewBox="100 90 200 260" aria-hidden="true" focusable="false">
-        <ellipse cx="178" cy="342" rx="74" ry="10" fill="#3B2A22" opacity=".18"/>
+        <ellipse class="cat-shadow" cx="178" cy="342" rx="74" ry="10" fill="#3B2A22" opacity=".18"/>
+        <g class="cat-figure" id="cat-figure">
+        <g class="cat-motion">
         <g class="cat-tail"><path class="fur-stroke" d="M224 326C274 330 294 290 278 246C272 232 260 236 264 250" stroke-width="20" fill="none" stroke-linecap="round"/><path class="pat-atigrado stripe" d="M262 318l8 6M280 292l9 2M283 266l9-1"/></g>
         <g class="cat-body">
           <path class="fur outline" d="M118 338C106 300 116 248 150 232C166 225 190 225 206 232C240 248 250 300 238 338Z"/>
           <path class="fur-light" d="M154 338C148 300 158 262 178 260C198 262 208 300 202 338Z"/>
           <path class="pat-atigrado stripe" d="M124 296q12-5 20 4M122 316q13-5 21 4M232 296q-12-5-20 4M234 316q-13-5-21 4"/>
           <g class="pat-manchas fur-dark"><ellipse cx="140" cy="272" rx="14" ry="10"/><ellipse cx="220" cy="300" rx="11" ry="15"/></g>
-          <ellipse class="fur outline" cx="160" cy="338" rx="17" ry="9"/><ellipse class="fur outline" cx="198" cy="338" rx="17" ry="9"/>
-          <g class="pat-calcetines sock"><ellipse cx="160" cy="338" rx="16" ry="8"/><ellipse cx="198" cy="338" rx="16" ry="8"/></g>
-          <path class="toe" d="M155 342v-5M165 342v-5M193 342v-5M203 342v-5"/>
-          <g class="dirt"><ellipse cx="138" cy="312" rx="9" ry="6"/><ellipse cx="214" cy="322" rx="7" ry="5"/><ellipse cx="196" cy="337" rx="6" ry="4"/></g>
+          <g class="dirt"><ellipse cx="138" cy="312" rx="9" ry="6"/><ellipse cx="214" cy="322" rx="7" ry="5"/></g>
         </g>
+        <g class="paw paw-l"><ellipse class="fur outline" cx="160" cy="338" rx="17" ry="9"/><ellipse class="pat-calcetines sock" cx="160" cy="338" rx="16" ry="8"/><path class="toe" d="M155 342v-5M165 342v-5"/></g>
+        <g class="paw paw-r"><ellipse class="fur outline" cx="198" cy="338" rx="17" ry="9"/><ellipse class="pat-calcetines sock" cx="198" cy="338" rx="16" ry="8"/><path class="toe" d="M193 342v-5M203 342v-5"/><ellipse class="dirt" cx="196" cy="337" rx="6" ry="4"/></g>
         <g class="cat-head">
-          <path class="fur outline" d="M130 168L136 104L172 140Z"/><path class="ear-in" d="M139 154L142 118L163 140Z"/>
-          <path class="fur outline" d="M226 168L220 104L184 140Z"/><path class="ear-in" d="M217 154L214 118L193 140Z"/>
+          <path class="fur outline ear ear-l" d="M130 168L136 104L172 140Z"/><path class="ear-in" d="M139 154L142 118L163 140Z"/>
+          <path class="fur outline ear ear-r" d="M226 168L220 104L184 140Z"/><path class="ear-in" d="M217 154L214 118L193 140Z"/>
           <ellipse class="fur outline" cx="178" cy="182" rx="62" ry="52"/>
           <path class="pat-atigrado stripe" d="M170 136l2 16M178 133v18M186 136l-2 16M118 184h14M120 196h11M238 184h-14M236 196h-11"/>
           <ellipse class="pat-manchas fur-dark" cx="205" cy="152" rx="16" ry="12"/>
-          <g class="eyes-open"><ellipse class="iris" cx="156" cy="180" rx="10" ry="12"/><ellipse cx="156" cy="181" rx="4" ry="9" fill="#231A16"/><circle cx="159" cy="175" r="3" fill="#FFF"/><ellipse class="iris" cx="200" cy="180" rx="10" ry="12"/><ellipse cx="200" cy="181" rx="4" ry="9" fill="#231A16"/><circle cx="203" cy="175" r="3" fill="#FFF"/></g>
+          <g class="eyes-open"><g class="pupils"><ellipse class="iris" cx="156" cy="180" rx="10" ry="12"/><ellipse cx="156" cy="181" rx="4" ry="9" fill="#231A16"/><circle cx="159" cy="175" r="3" fill="#FFF"/><ellipse class="iris" cx="200" cy="180" rx="10" ry="12"/><ellipse cx="200" cy="181" rx="4" ry="9" fill="#231A16"/><circle cx="203" cy="175" r="3" fill="#FFF"/></g></g>
           <path class="eyes-closed line" d="M146 182q10 8 20 0M190 182q10 8 20 0"/>
           <path class="eyes-happy line" d="M146 184q10-12 20 0M190 184q10-12 20 0"/>
           <ellipse class="fur-light" cx="170" cy="204" rx="13" ry="10"/><ellipse class="fur-light" cx="186" cy="204" rx="13" ry="10"/>
           <ellipse class="blush" cx="140" cy="203" rx="9" ry="5"/><ellipse class="blush" cx="216" cy="203" rx="9" ry="5"/>
           <path d="M172 194h12l-6 7z" fill="#D9786E" stroke="#D9786E" stroke-width="2" stroke-linejoin="round"/>
           <path class="mouth line" d="M178 201v4M178 205q-5 6-11 3M178 205q5 6 11 3"/>
+          <path class="tongue" d="M173 208q5 9 10 0z" fill="#E58C8C"/>
           <path class="whisker" d="M150 204l-40-8M150 209l-42 1M150 214l-38 8M206 204l40-8M206 209l42 1M206 214l38 8"/>
           <g class="dirt"><ellipse cx="206" cy="160" rx="7" ry="5"/><ellipse cx="146" cy="216" rx="5" ry="3.5"/></g>
+        </g>
+        </g>
         </g>
         <g class="zzz"><text x="236" y="130">Z</text><text x="252" y="110">Z</text><text x="268" y="90">Z</text></g>
         <g class="bubbles"><circle cx="128" cy="280" r="9"/><circle cx="232" cy="262" r="7"/><circle cx="150" cy="232" r="6"/><circle cx="214" cy="318" r="10"/><circle cx="182" cy="140" r="5"/></g>
       </svg>
     </button>
-    <p class="hint" id="message" role="status" aria-live="polite">Toca a Mishi para acariciarlo.</p>
+    <div class="fx-layer" id="fx" aria-hidden="true"></div>
+    <p class="hint" id="message" role="status" aria-live="polite">Toca a Mishi para acariciarlo o toca el suelo para llamarlo.</p>
   </main>
 
   <nav class="actions" aria-label="Acciones">
@@ -169,6 +174,7 @@
 </section>
 
 <script src="model.js"></script>
+<script src="behavior.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

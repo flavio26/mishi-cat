@@ -86,13 +86,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cloud { animation: drift 14s ease-in-out infinite alternate; }
 
 .cat {
-  position: absolute; left: 50%; bottom: 6%; transform: translateX(-56%);
-  width: min(78%, 330px); aspect-ratio: 200 / 260; padding: 0; border: 0; background: none;
-  border-radius: 40px; touch-action: none;
+  position: absolute; left: 50%; bottom: 4%; z-index: 2;
+  width: min(42%, 190px); aspect-ratio: 200 / 260; padding: 0; border: 0; background: none;
+  border-radius: 40px; touch-action: none; -webkit-tap-highlight-color: transparent;
+  transform: translateX(-39%) scale(var(--depth, 1)); transform-origin: 39% 97%;
+  transition: left var(--walk-ms, 0ms) linear, bottom var(--walk-ms, 0ms) linear, transform var(--walk-ms, 0ms) linear;
 }
+.fx-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.fx-sparkle { color: #8DBBC7; }
 .cat-svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .hint {
-  position: absolute; left: 10px; right: 10px; top: 10px; margin: 0; padding: 8px 12px;
+  position: absolute; z-index: 5; left: 10px; right: 10px; top: 10px; margin: 0; padding: 8px 12px;
   background: rgba(255, 249, 240, .92); border-radius: 12px; font-size: .9rem; text-align: center;
   color: var(--ink); box-shadow: var(--shadow); pointer-events: none;
 }
@@ -151,6 +155,56 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cat.is-sleeping .zzz text { animation: zfloat 3s ease-in-out infinite; }
 .cat.is-sleeping .zzz text:nth-child(2) { animation-delay: .6s; font-size: 26px; }
 .cat.is-sleeping .zzz text:nth-child(3) { animation-delay: 1.2s; font-size: 30px; }
+
+/* Paseo y reacciones */
+.cat-motion, .paw, .cat-shadow, .pupils, .tongue, .scene-yarn { transform-box: fill-box; }
+.cat-motion { transform-origin: 50% 100%; }
+.cat-shadow { transform-origin: 50% 50%; }
+.tongue { display: none; }
+.cat.is-walking .cat-motion { animation: walk-bob .44s ease-in-out infinite; }
+.cat.is-walking .paw-l { animation: step .44s ease-in-out infinite; }
+.cat.is-walking .paw-r { animation: step .44s ease-in-out -.22s infinite; }
+.cat.is-walking .cat-tail { animation-duration: .9s; }
+.cat.is-running .cat-motion, .cat.is-running .paw-l, .cat.is-running .paw-r { animation-duration: .3s; }
+.cat.is-running .paw-r { animation-delay: -.15s; }
+.cat.is-hop .cat-motion { animation: hop .7s cubic-bezier(.3, .7, .4, 1); }
+.cat.is-hop .cat-shadow { animation: shadow-hop .7s ease-in-out; }
+.cat.is-stretch .cat-motion { animation: stretch 1.6s ease-in-out; }
+.cat.is-stretch .eyes-open { display: none; }
+.cat.is-stretch .eyes-closed { display: inline; }
+.cat.is-look .cat-head { animation: look 2.4s ease-in-out; }
+.cat.is-look .pupils { animation: pupils 2.4s ease-in-out; }
+.cat.is-pounce .cat-motion { animation: pounce .9s ease-in-out; }
+.cat.is-pounce .paw-l { animation: bat .45s ease-in-out 2; }
+.cat.is-eating .cat-motion { animation: lean-eat 2.3s ease-in-out; }
+.cat.is-eating .cat-head { animation: nod .5s ease-in-out 4; }
+.cat.is-eating .eyes-open, .cat.is-licking .eyes-open { display: none; }
+.cat.is-eating .eyes-happy, .cat.is-licking .eyes-happy { display: inline; }
+.cat.is-eating .tongue, .cat.is-licking .tongue { display: inline; }
+.cat.is-licking .tongue { animation: lick .25s ease-in-out 4; transform-origin: 50% 0; }
+.cat.is-purring .cat-motion { animation: purr .12s linear infinite; }
+.cat.is-purring .eyes-open { display: none; }
+.cat.is-purring .eyes-happy { display: inline; }
+.cat.is-purring .cat-tail { animation-duration: .8s; }
+.cat.is-cleaning .cat-motion { animation: shake .5s ease-in-out 3; }
+.cat.mood-happy .cat-tail { animation-duration: 1.8s; }
+.cat.mood-sad .cat-head { transform: translateY(6px) rotate(-3deg); }
+.cat.is-sleeping .cat-motion { transform: translateY(16px) scale(1.06, .9); }
+.scene-yarn.is-rolling { transform-origin: 50% 50%; animation: roll 1.1s ease-out; }
+@keyframes walk-bob { 0%, 100% { transform: translateY(0) rotate(2deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
+@keyframes step { 0%, 100% { transform: translate(-4px, 0); } 50% { transform: translate(7px, -10px); } }
+@keyframes hop { 0% { transform: scale(1.06, .9); } 35% { transform: translateY(-48px) scale(.95, 1.06); } 70% { transform: translateY(0) scale(1.08, .9); } 100% { transform: none; } }
+@keyframes shadow-hop { 35% { transform: scale(.65); opacity: .5; } }
+@keyframes stretch { 25%, 70% { transform: scale(1.14, .84); } }
+@keyframes look { 15%, 40% { transform: rotate(-12deg) translateX(-6px); } 60%, 85% { transform: rotate(10deg) translateX(6px); } }
+@keyframes pupils { 15%, 40% { transform: translateX(-4px); } 60%, 85% { transform: translateX(4px); } }
+@keyframes pounce { 35% { transform: translateY(8px) scale(1.06, .86); } 60% { transform: translate(22px, -34px) rotate(10deg); } 100% { transform: none; } }
+@keyframes bat { 50% { transform: translate(16px, -44px) rotate(-20deg); } }
+@keyframes lean-eat { 15%, 85% { transform: translate(10px, 10px) rotate(8deg); } }
+@keyframes lick { 50% { transform: scaleY(1.5); } }
+@keyframes purr { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(1.2px); } }
+@keyframes shake { 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+@keyframes roll { 50% { transform: translateX(-18px) rotate(-200deg); } }
 
 .fx-heart { position: absolute; width: 28px; height: 28px; color: var(--terra); pointer-events: none; animation: heart 1s ease-out forwards; }
 
@@ -212,6 +266,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes heart { from { opacity: 1; transform: translateY(0) scale(.8); } to { opacity: 0; transform: translateY(-60px) scale(1.2); } }
 @keyframes pop { 50% { transform: scale(1.25); } 100% { transform: scale(.6); opacity: 0; } }
 
+html.reduce-motion .cat { transition: none !important; }
 html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
   animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
 }

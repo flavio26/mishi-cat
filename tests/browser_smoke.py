@@ -7,6 +7,11 @@ from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'build/test-results'
 OUT.mkdir(parents=True,exist_ok=True)
+def wait_score(page,n):
+ for _ in range(60):
+  if int(page.locator('#game-score').inner_text())>=n: return
+  page.wait_for_timeout(100)
+ raise AssertionError('Score did not reach %d (got %s)'%(n,page.locator('#game-score').inner_text()))
 with sync_playwright() as p:
  browser=p.chromium.launch(channel='chrome',headless=True)
  context=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
@@ -22,9 +27,12 @@ with sync_playwright() as p:
   assert page.locator('#'+required).count()==1,'Missing #'+required
  old=page.locator('#stat-mood').inner_text()
  page.locator('#pet').click();assert page.locator('#stat-mood').inner_text()!=old
- page.locator('#play').click();assert page.locator('#game').is_visible()
- page.locator('#game-target').click();assert page.locator('#game-score').inner_text()=='1'
- page.locator('#game-close').click();assert not page.locator('#game').is_visible()
+ page.locator('#play').click();assert page.locator('#game').is_visible() and page.locator('#game-target').is_visible()
+ page.wait_for_timeout(300);assert 'is-walking' in page.get_attribute('#cat','class'),'Cat does not chase the yarn'
+ wait_score(page,1)
+ page.screenshot(path=str(OUT/'mishi-game.png'))
+ page.locator('#game-target').click();wait_score(page,2)
+ page.locator('#game-close').click();assert not page.locator('#game').is_visible() and not page.locator('#game-target').is_visible()
  page.locator('#customize summary').click();page.locator('#name').fill('Luna');page.locator('#name').press('Tab')
  page.reload(wait_until='networkidle');assert page.locator('#cat-name').inner_text()=='Luna'
  assert not errors,errors

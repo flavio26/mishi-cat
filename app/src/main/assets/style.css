@@ -92,7 +92,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   transform: translateX(-39%) scale(var(--depth, 1)); transform-origin: 39% 97%;
   transition: left var(--walk-ms, 0ms) linear, bottom var(--walk-ms, 0ms) linear, transform var(--walk-ms, 0ms) linear;
 }
-.fx-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.fx-layer { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .fx-sparkle { color: #8DBBC7; }
 .cat-svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .hint {
@@ -219,39 +219,89 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .action-primary { background: var(--terra); border-color: var(--terra); color: #fff; }
 .action-label { white-space: nowrap; }
 
-.game[hidden], .game-result[hidden] { display: none; }
+.game[hidden], .toy[hidden] { display: none; }
 .game {
-  position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; gap: 8px;
-  padding: calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom));
-  background: var(--cream);
+  position: absolute; z-index: 6; left: 8px; right: 8px; top: 8px; display: grid; gap: 6px;
+  padding: 8px; background: rgba(255, 249, 240, .94); border: 2px solid var(--line);
+  border-radius: 16px; box-shadow: var(--shadow);
 }
-.game-hud { display: flex; align-items: center; gap: 10px; max-width: 480px; width: 100%; margin: 0 auto; }
-.game-title { flex: 1; margin: 0; font-size: 1.15rem; color: var(--terra-dark); }
-.hud-item { display: grid; text-align: center; min-width: 58px; padding: 4px 8px; background: var(--card); border: 2px solid var(--line); border-radius: 12px; }
-.hud-label { font-size: .7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-.hud-value { font-size: 1.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.timer-bar { height: 10px; max-width: 480px; width: 100%; margin: 0 auto; background: var(--cream-2); border-radius: 999px; overflow: hidden; }
+.game-hud { display: flex; align-items: center; gap: 8px; }
+.game-title { flex: 1; margin: 0; font-size: 1.05rem; color: var(--terra-dark); }
+.hud-item { display: grid; text-align: center; min-width: 54px; padding: 2px 8px; background: var(--card); border: 2px solid var(--line); border-radius: 12px; }
+.hud-label { font-size: .65rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.hud-value { font-size: 1.1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.game .icon-btn { width: 44px; height: 44px; box-shadow: none; }
+.timer-bar { height: 8px; background: var(--cream-2); border-radius: 999px; overflow: hidden; }
 .timer-bar .bar-fill { display: block; height: 100%; width: 100%; background: var(--sage); border-radius: inherit; transition: width 1s linear; }
 .timer-bar.is-hurry .bar-fill { background: var(--terra); }
-.playfield {
-  position: relative; flex: 1; max-width: 480px; width: 100%; margin: 0 auto; overflow: hidden;
-  border-radius: 24px; border: 2px solid var(--line); touch-action: none;
-  background: radial-gradient(circle at 50% 120%, #9DB59A 0 45%, transparent 46%), linear-gradient(#F8ECD8, #F0DDC1);
-}
+.game-tip { margin: 0; font-size: .78rem; color: var(--muted); text-align: center; }
+.room.is-playing .hint { top: auto; bottom: 10px; }
+.room.is-playing .scene-yarn { opacity: 0; }
 .toy {
-  position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px;
-  display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(255, 249, 240, .7);
-  color: #D96C5A; box-shadow: var(--shadow); transition: left .25s ease, top .25s ease;
+  position: absolute; z-index: 4; left: 50%; top: 80%; width: 52px; height: 52px; padding: 0;
+  display: grid; place-items: center; border: 0; border-radius: 50%; background: none;
+  color: #D96C5A; transform: translate(-50%, -78%);
+  transition: left .55s cubic-bezier(.2, .8, .3, 1), top .55s cubic-bezier(.2, .8, .3, 1);
 }
-.toy-svg { width: 54px; height: 54px; }
-.toy.is-golden { color: #D69A2D; }
-.toy.caught { animation: pop .25s ease-out; }
-.game-result {
-  position: absolute; inset: 20% 8% auto; padding: 18px; text-align: center; background: var(--card);
-  border: 2px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(59, 42, 34, .22);
+.toy-svg { width: 40px; height: 40px; filter: drop-shadow(0 3px 2px rgba(59, 42, 34, .25)); }
+.toy.is-rolling .toy-svg { animation: toy-roll .55s ease-out; }
+.toy.caught .toy-svg { animation: pop-in .26s ease-out; }
+@keyframes toy-roll { from { transform: rotate(-360deg); } }
+
+/* Suciedad: caca y vómito */
+.mess-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.mess-item {
+  position: absolute; pointer-events: auto; padding: 0; border: 0; background: none;
+  min-width: 46px; min-height: 46px; display: grid; place-items: end center;
+  transform: translate(-50%, -82%); animation: mess-in .45s cubic-bezier(.3, 1.6, .5, 1);
 }
-.game-result h3 { margin: 0 0 6px; color: var(--terra-dark); font-size: 1.3rem; }
-.game-result p { margin: 0; color: var(--muted); }
+.mess-poop { width: max(46px, calc(var(--s, 1) * 34px)); height: max(52px, calc(var(--s, 1) * 42px)); }
+.mess-vomit { width: max(52px, calc(var(--s, 1) * 46px)); height: max(46px, calc(var(--s, 1) * 24px)); transform: translate(-50%, -62%); }
+.mess-item svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mess-item:active { transform: translate(-50%, -82%) scale(.9); }
+.stink path { fill: none; stroke: #8E9A5B; stroke-width: 2; stroke-linecap: round; opacity: 0; animation: stink 2.4s ease-in-out infinite; }
+.stink path:nth-child(2) { animation-delay: .8s; } .stink path:nth-child(3) { animation-delay: 1.6s; }
+@keyframes stink { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: .8; } 100% { opacity: 0; transform: translateY(-6px); } }
+@keyframes mess-in { from { opacity: 0; scale: .3; } }
+@keyframes pop-in { 50% { transform: scale(1.3); } }
+.badge {
+  position: absolute; top: 4px; right: 8px; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 999px; background: var(--terra); color: #fff; font-size: .72rem; font-weight: 800;
+  line-height: 20px; text-align: center; box-shadow: 0 0 0 2px var(--card);
+}
+.badge[hidden] { display: none; }
+.action { position: relative; }
+
+/* Poses de vida propia */
+.fx-say {
+  position: absolute; transform: translate(-50%, -100%); padding: 4px 10px; border-radius: 12px 12px 12px 2px;
+  background: #fff; color: var(--terra-dark); font-weight: 800; font-size: .9rem; white-space: nowrap;
+  box-shadow: var(--shadow); animation: say 1.6s ease-out forwards;
+}
+@keyframes say { 0% { opacity: 0; translate: 0 8px; } 15%, 75% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: 0 -10px; } }
+.cat.is-poop .cat-motion { animation: squat 1.8s ease-in-out; }
+.cat.is-poop .cat-tail { animation: tail-up 1.8s ease-in-out; }
+.cat.is-poop .eyes-open, .cat.is-vomit .eyes-open, .cat.is-disgust .eyes-open, .cat.is-groom .eyes-open { display: none; }
+.cat.is-poop .eyes-closed, .cat.is-vomit .eyes-closed, .cat.is-disgust .eyes-closed, .cat.is-groom .eyes-closed { display: inline; }
+.cat.is-scratch .paw-r { animation: scratch .25s ease-in-out 4; }
+.cat.is-vomit .cat-motion { animation: heave .63s ease-in-out 3; }
+.cat.is-vomit .cat-head { animation: retch .63s ease-in-out 3; }
+.cat.is-vomit .tongue, .cat.is-meow .tongue, .cat.is-groom .tongue { display: inline; }
+.cat.is-sniff .cat-head { animation: sniff 1.3s ease-in-out; }
+.cat.is-disgust .cat-head { animation: shake-head .3s ease-in-out 3; }
+.cat.is-meow .cat-head { animation: meow .9s ease-in-out; }
+.cat.is-groom .cat-head { animation: groom 1s ease-in-out 2; }
+.cat.is-groom .paw-l { animation: groom-paw 1s ease-in-out 2; }
+@keyframes squat { 15%, 85% { transform: translateY(12px) scale(1.06, .88); } 45% { transform: translateY(14px) scale(1.08, .86); } }
+@keyframes tail-up { 15%, 85% { transform: rotate(-28deg); } }
+@keyframes scratch { 50% { transform: translate(14px, -4px) rotate(18deg); } }
+@keyframes heave { 40% { transform: translate(4px, 10px) scale(1.04, .92); } 70% { transform: translate(2px, -4px); } }
+@keyframes retch { 40% { transform: translateY(18px) rotate(6deg); } }
+@keyframes sniff { 20%, 80% { transform: translateY(16px) rotate(8deg); } 35%, 65% { transform: translateY(18px) rotate(6deg); } }
+@keyframes shake-head { 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+@keyframes meow { 30%, 70% { transform: translateY(-6px) rotate(-8deg); } }
+@keyframes groom { 30%, 70% { transform: translateY(10px) rotate(-14deg); } }
+@keyframes groom-paw { 30%, 70% { transform: translate(6px, -70px) rotate(-30deg); } }
 .btn { min-height: 48px; padding: 10px 18px; border-radius: 14px; border: 2px solid var(--terra); background: var(--terra); color: #fff; font-weight: 700; }
 .btn-ghost { background: transparent; color: var(--terra-dark); }
 
@@ -264,7 +314,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes zfloat { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
 @keyframes drift { to { transform: translateX(28px); } }
 @keyframes heart { from { opacity: 1; transform: translateY(0) scale(.8); } to { opacity: 0; transform: translateY(-60px) scale(1.2); } }
-@keyframes pop { 50% { transform: scale(1.25); } 100% { transform: scale(.6); opacity: 0; } }
 
 html.reduce-motion .cat { transition: none !important; }
 html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {

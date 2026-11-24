@@ -1,4 +1,11 @@
-# Verificación de Mishi 1.1.0
+# Verificación de Mishi 1.2.0
+
+## Comprobado el 24/11/2026 (1.2.0, vida propia)
+
+- `tests/model_life.test.js`: 9 pruebas aprobadas (caca tras comer, vómito al comer lleno, bolas de pelo, sin eventos dormido o jugando, limpieza, guardados antiguos).
+- `tests/life_smoke.py` en Chrome móvil: aprobado. La caca hecha en ausencia aparece con contador en «Limpiar»; tocarla la quita; comer estando lleno hace que Mishi camine, vomite (pose visible) y aparezca el vómito; «Limpiar» recoge todo y lo guarda.
+- `tests/browser_smoke.py`: el minijuego se abre dentro de la habitación, Mishi corre a por el ovillo y suma puntos solo al atraparlo; cerrarlo oculta ovillo y marcador.
+- Resto de pruebas repetidas: aprobadas. Sigue sin probarse en un móvil Android físico.
 
 ## Comprobado el 23/11/2026 (1.1.0, paseo y reacciones)
 

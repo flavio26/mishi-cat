@@ -26,6 +26,8 @@
       asleep: { hunger: -0.25, energy: 2.0, mood: -0.05, hygiene: -0.1 }
     },
     cooldowns: { pet: 600, petXp: 4000, feed: 1200, clean: 1200, sleep: 800 },
+    mess: { max: 4, digestMs: 2 * MINUTE, vomitDelayMs: 8000, hairballEveryMs: 15 * MINUTE, hairballHygiene: 25, overfedHunger: 85,
+      hygienePerMin: 0.2, moodPerMin: 0.2, area: { minX: 84, maxX: 292, minY: 330, maxY: 386 } },
     game: { durationMs: 20000, countdownMs: 3000, minEnergy: 15, minHunger: 10, maxScore: 120, energyCost: 12, hungerCost: 6, hygieneCost: 5 }
   });
 
@@ -81,7 +83,8 @@
       totals: { pets: 0, feeds: 0, cleans: 0, naps: 0, games: 0 },
       settings: { reducedMotion: false },
       gameCounter: 0, activeGameId: null,
-      cooldowns: { pet: 0, petXp: 0, feed: 0, clean: 0, sleep: 0 }
+      cooldowns: { pet: 0, petXp: 0, feed: 0, clean: 0, sleep: 0 },
+      mess: [], messCounter: 0, poopDueAt: null, vomitDueAt: null, lastHairballAt: 0
     };
   }
 
@@ -109,6 +112,21 @@
     Object.keys(d.totals).forEach(function (k) { d.totals[k] = clampInt(tt[k], 0, 1e9, 0); });
     d.settings.reducedMotion = !!(raw.settings && raw.settings.reducedMotion === true);
     d.gameCounter = clampInt(raw.gameCounter, 0, 1e9, 0);
+    var A = CONFIG.mess.area;
+    d.messCounter = clampInt(raw.messCounter, 0, 1e9, 0);
+    if (Array.isArray(raw.mess)) {
+      raw.mess.forEach(function (m) {
+        if (d.mess.length >= CONFIG.mess.max || !m || (m.type !== 'poop' && m.type !== 'vomit')) { return; }
+        var id = clampInt(m.id, 1, 1e9, 0);
+        if (!id) { return; }
+        d.mess.push({ id: id, type: m.type, x: clamp(num(m.x, 180), A.minX, A.maxX), y: clamp(num(m.y, 360), A.minY, A.maxY), at: Math.min(num(m.at, now), now) });
+        if (id > d.messCounter) { d.messCounter = id; }
+      });
+    }
+    function due(v, maxAhead) { return isNum(v) ? Math.min(v, now + maxAhead) : null; }
+    d.poopDueAt = due(raw.poopDueAt, CONFIG.mess.digestMs);
+    d.vomitDueAt = due(raw.vomitDueAt, CONFIG.mess.vomitDelayMs);
+    d.lastHairballAt = Math.min(num(raw.lastHairballAt, 0), now);
     return d;
   }
 
@@ -137,6 +155,8 @@
       if (st.hygiene < 25) { moodDelta -= 0.3; }
       if (st.energy < 15) { moodDelta -= 0.3; }
     }
+    var messes = s.mess ? s.mess.length : 0;
+    if (messes) { moodDelta -= CONFIG.mess.moodPerMin * messes; st.hygiene = clamp(st.hygiene - CONFIG.mess.hygienePerMin * messes * minutes, 0, 100); }
     st.hunger = clamp(st.hunger + r.hunger * minutes, 0, 100);
     st.energy = clamp(st.energy + r.energy * minutes, 0, 100);
     st.hygiene = clamp(st.hygiene + r.hygiene * minutes, 0, 100);
@@ -168,7 +188,57 @@
       });
     }
     s.lastTick = now;
+    res.events = [];
+    if (!opts.holdEvents) { lifeEvents(s, now, opts.rng || Math.random, res.events); }
     return res;
+  }
+
+  function addMess(s, type, now, rng) {
+    if (!Array.isArray(s.mess)) { s.mess = []; }
+    if (s.mess.length >= CONFIG.mess.max) { return null; }
+    var A = CONFIG.mess.area;
+    s.messCounter = num(s.messCounter, 0) + 1;
+    var m = { id: s.messCounter, type: type, x: Math.round(A.minX + rng() * (A.maxX - A.minX)), y: Math.round(A.minY + rng() * (A.maxY - A.minY)), at: now };
+    s.mess.push(m);
+    return m;
+  }
+
+  function lifeEvents(s, now, rng, events) {
+    if (s.sleeping || s.activeGameId != null) { return; }
+    var C = CONFIG.mess, m;
+    if (isNum(s.vomitDueAt) && now >= s.vomitDueAt) {
+      s.vomitDueAt = null;
+      m = addMess(s, 'vomit', now, rng);
+      s.stats.hunger = clamp(s.stats.hunger - 25, 0, 100);
+      s.stats.mood = clamp(s.stats.mood - 8, 0, 100);
+      if (m) { events.push({ type: 'vomit', id: m.id }); }
+    }
+    if (isNum(s.poopDueAt) && now >= s.poopDueAt) {
+      s.poopDueAt = null;
+      m = addMess(s, 'poop', now, rng);
+      if (m) { events.push({ type: 'poop', id: m.id }); }
+    }
+    if (!isNum(s.vomitDueAt) && s.stats.hygiene < C.hairballHygiene && now - num(s.lastHairballAt, 0) >= C.hairballEveryMs) {
+      s.lastHairballAt = now;
+      m = addMess(s, 'vomit', now, rng);
+      s.stats.mood = clamp(s.stats.mood - 4, 0, 100);
+      if (m) { events.push({ type: 'hairball', id: m.id }); }
+    }
+  }
+
+  function cleanMess(state, now, id) {
+    if (!state.mess || !state.mess.length) { return fail(state, 'noMess'); }
+    var s = prepare(state);
+    var before = s.mess.length;
+    s.mess = id == null ? [] : s.mess.filter(function (m) { return m.id !== id; });
+    var removed = before - s.mess.length;
+    if (!removed) { return fail(state, 'noMess'); }
+    s.stats.mood = clamp(s.stats.mood + 2 * removed, 0, 100);
+    s.stats.hygiene = clamp(s.stats.hygiene + 3 * removed, 0, 100);
+    s.totals.cleans += 1;
+    var r = success(state.level, s, 2 * removed);
+    r.removed = removed;
+    return r;
   }
 
   function addXp(s, amount) {
@@ -225,11 +295,16 @@
     if (onCooldown(s, 'feed', now)) { return fail(state, 'cooldown'); }
     if (s.stats.hunger >= 95) { return fail(state, 'full'); }
     s.cooldowns.feed = now;
+    var overfed = s.stats.hunger >= CONFIG.mess.overfedHunger;
+    if (overfed && !isNum(s.vomitDueAt)) { s.vomitDueAt = now + CONFIG.mess.vomitDelayMs; }
+    if (!isNum(s.poopDueAt)) { s.poopDueAt = now + CONFIG.mess.digestMs; }
     s.stats.hunger = clamp(s.stats.hunger + 30, 0, 100);
     s.stats.mood = clamp(s.stats.mood + 4, 0, 100);
     s.stats.hygiene = clamp(s.stats.hygiene - 2, 0, 100);
     s.totals.feeds += 1;
-    return success(state.level, s, 4);
+    var fr = success(state.level, s, 4);
+    fr.overfed = overfed;
+    return fr;
   }
 
   function clean(state, now) {
@@ -377,7 +452,7 @@
     serialize: serialize,
     deserialize: deserialize,
     tick: tick,
-    pet: pet, feed: feed, clean: clean,
+    pet: pet, feed: feed, clean: clean, cleanMess: cleanMess,
     sleep: sleep, wake: wake, toggleSleep: toggleSleep,
     canStartGame: canStartGame, startGame: startGame, finishGame: finishGame, abortGame: abortGame, gameRewards: gameRewards,
     rename: rename,

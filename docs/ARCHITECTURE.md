@@ -3,7 +3,8 @@
 ## Aplicación
 
 - Identificador: `com.flavio26.mishi`.
-- Versión: `1.1.0`, código `2`.
+- Versión: `1.2.0`, código `3`.
+- Vida propia (1.2.0): `model.js` guarda la suciedad (`mess[]`, caca y vómito) y la programa tras comer; `behavior.js` hace que Mishi camine hasta el sitio, la escenifique, la huela y se duerma solo con poca energía; `app.js` la dibuja en `#mess`, la limpia al tocarla o con «Limpiar», y ejecuta el minijuego dentro de la habitación (el gato persigue el ovillo).
 - Android mínimo: API 26; objetivo: API 35.
 - Una Activity Java muestra los recursos de `assets/` en una WebView.
 - `model.js` contiene el estado y las reglas; `behavior.js` solo anima: paseo por la habitación, reacciones a cuidados y llamada tocando el suelo. No modifica estadísticas.

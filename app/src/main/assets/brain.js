@@ -84,7 +84,7 @@
     var scores = {}, total = 0;
     ACTS.forEach(function (a) {
       var reps = m.recent.filter(function (r) { return r === a; }).length;
-      var s = Math.max(0, u[a]) * m.acts[a] * Math.pow(0.55, reps);
+      var s = Math.max(0, u[a]) * m.acts[a] * Math.pow(0.72, reps);
       scores[a] = s; total += Math.exp(s * 2.2) * (s > 0 ? 1 : 0);
     });
     var r = rng() * total, act = 'explore';

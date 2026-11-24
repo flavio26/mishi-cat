@@ -1,4 +1,10 @@
-# Verificación de Mishi 1.3.1
+# Verificación de Mishi 1.4.0
+
+## Comprobado el 24/11/2026 (1.4.0, movimiento realista)
+- Hoja de poses revisada visualmente (19 poses, fases de marcha).
+- Pruebas de modelo y cerebro, browser/behavior/life smoke y offline_origin aprobadas.
+- Secuencia autónoma de 20 s coherente (explorar, olfatear, mirar, tumbarse, seguir).
+- Pendiente: prueba en móvil físico.
 
 ## Comprobado el 24/11/2026 (1.3.1, cerebro y movimiento autónomo)
 - `node tests/brain.test.js`: 9 pruebas (decisiones según necesidades, refuerzo, sitios y horas aprendidas, saneado de guardados).

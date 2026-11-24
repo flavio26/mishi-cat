@@ -3,7 +3,8 @@
 ## Aplicación
 
 - Identificador: `com.flavio26.mishi`.
-- Versión: `1.3.1`, código `5`.
+- Versión: `1.4.0`, código `6`.
+- Movimiento realista (1.4.0): `sprite.js` es un esqueleto (caderas, hombros, cabeza, 4 patas, cola) dibujado a 128×96; cada pose es un conjunto de articulaciones y se mezclan entre sí. `behavior.js` mueve a Mishi con aceleración y frenada, elige paso/trote/carrera/acecho según la velocidad y avanza las patas según la distancia (sin patinar), anima el giro, mantiene cada actividad hasta acabarla, añade microgestos en reposo y sigue tu dedo.
 - Cerebro (1.3.1): `brain.js` decide qué hace Mishi sin que le toques (explorar, patrullar, mirar por la ventana, cazar, siesta, lavarse, pedir, buscarte, locuras, amasar, arañar, olfatear) puntuando cada acción según sus necesidades, la hora, su personalidad (curioso, juguetón, cariñoso, vago; aleatoria al nacer) y lo aprendido. Aprende por refuerzo: caricias, comida y juego refuerzan lo que hacía y dónde estaba; ignorarle o el desorden lo debilitan. Guarda sitios favoritos y horas habituales en `localStorage` `mishi.brain.v1`. `behavior.js` ejecuta el plan (pasos ir/acción/esperar, cancelables).
 - Gato pixel-art (1.3.0): `sprite.js` dibuja a Mishi de perfil en un canvas 64×48 (poses: andar, trotar, correr, sentado, tumbado, dormir, estirarse, lavarse, comer, saltar, caca, vómito); `behavior.js` lo anima a ~15 fps. `model.js` añade el arenero (`litter` 0–3; lleno = caca en el suelo) y la noche real (23–7 h: se cansa antes y no se despierta solo).
 - Vida propia (1.2.0): `model.js` guarda la suciedad (`mess[]`, caca y vómito) y la programa tras comer; `behavior.js` hace que Mishi camine hasta el sitio, la escenifique, la huela y se duerma solo con poca energía; `app.js` la dibuja en `#mess`, la limpia al tocarla o con «Limpiar», y ejecuta el minijuego dentro de la habitación (el gato persigue el ovillo).

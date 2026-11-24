@@ -42,7 +42,7 @@ Crea tu clave privada con `keytool -genkeypair`, alias `mishi`, algoritmo RSA, 3
 python scripts/build.py
 ```
 
-Resultado: `dist/Mishi-1.3.1.apk` y `dist/SHA256SUMS.txt`. El script verifica firma, alineación y metadatos antes de terminar.
+Resultado: `dist/Mishi-1.4.0.apk` y `dist/SHA256SUMS.txt`. El script verifica firma, alineación y metadatos antes de terminar.
 
 ## Privacidad
 

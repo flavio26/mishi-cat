@@ -23,6 +23,9 @@ with sync_playwright() as p:
  page.goto('http://127.0.0.1:8787',wait_until='networkidle')
  page.screenshot(path=str(OUT/'mishi-mobile.png'),full_page=True)
  assert page.locator('svg').count()>0, 'Missing cat illustration'
+ page.wait_for_timeout(300)
+ painted=page.evaluate("(()=>{const c=document.getElementById('cat-canvas');const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i])n++;return n;})()")
+ assert painted>300, ('Pixel cat not drawn', painted)
  for required in ['cat','feed','pet','sleep','clean','play','name','coat','sound','game','game-target','game-time','game-score','game-close','stat-hunger','stat-energy','stat-mood','stat-cleanliness','level','xp','message','cat-name']:
   assert page.locator('#'+required).count()==1,'Missing #'+required
  old=page.locator('#stat-mood').inner_text()

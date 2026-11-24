@@ -3,7 +3,8 @@
 ## Aplicación
 
 - Identificador: `com.flavio26.mishi`.
-- Versión: `1.2.0`, código `3`.
+- Versión: `1.3.0`, código `4`.
+- Gato pixel-art (1.3.0): `sprite.js` dibuja a Mishi de perfil en un canvas 64×48 (poses: andar, trotar, correr, sentado, tumbado, dormir, estirarse, lavarse, comer, saltar, caca, vómito); `behavior.js` lo anima a ~15 fps. `model.js` añade el arenero (`litter` 0–3; lleno = caca en el suelo) y la noche real (23–7 h: se cansa antes y no se despierta solo).
 - Vida propia (1.2.0): `model.js` guarda la suciedad (`mess[]`, caca y vómito) y la programa tras comer; `behavior.js` hace que Mishi camine hasta el sitio, la escenifique, la huela y se duerma solo con poca energía; `app.js` la dibuja en `#mess`, la limpia al tocarla o con «Limpiar», y ejecuta el minijuego dentro de la habitación (el gato persigue el ovillo).
 - Android mínimo: API 26; objetivo: API 35.
 - Una Activity Java muestra los recursos de `assets/` en una WebView.

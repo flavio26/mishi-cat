@@ -4,15 +4,17 @@
   const M=window.MishiModel, $=id=>document.getElementById(id), KEY='mishi.v1';
   if (!M) throw Error('Falta el motor de Mishi');
   let state, bootEvents=[];
-  try { const r=M.tick(M.deserialize(localStorage.getItem(KEY),Date.now()).state,Date.now(),{offline:true}); state=r.state; bootEvents=r.events||[]; }
+  const night=t=>Boolean(M.isNight&&M.isNight(t));
+  const T=(st,t,opts)=>M.tick(st,t,{...(opts||{}),night:night(t)});
+  try { const r=T(M.deserialize(localStorage.getItem(KEY),Date.now()).state,Date.now(),{offline:true}); state=r.state; bootEvents=r.events||[]; }
   catch (_) { state=M.createDefaultState(Date.now()); }
   if(state.activeGameId!=null){const r=M.abortGame(state,state.activeGameId);if(r.ok)state=r.state;}
-  let game=null, audio=null, lastPet=0, soundOn=false, sleepPending=false, messBusy=false;
+  let game=null, audio=null, lastPet=0, soundOn=false, sleepPending=false, messBusy=false, litterShown=null;
   const pendingMess=new Set(), messQueue=[];
   const motionQuery=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
   const reduced=()=>Boolean(state.settings.reducedMotion||motionQuery?.matches);
   const visibleMess=()=>(state.mess||[]).filter(m=>!pendingMess.has(m.id));
-  const B=window.MishiBehavior&&$('cat')&&$('room')?window.MishiBehavior.create({cat:$('cat'),room:$('room'),figure:$('cat-figure'),fx:$('fx'),yarn:document.querySelector('.scene-yarn'),reduced,isBusy:()=>game!==null||sleepPending||messBusy,stats:()=>state.stats,name:()=>state.name,say,sound,mess:visibleMess,tired:autoSleep}):null;
+  const B=window.MishiBehavior&&$('cat')&&$('room')?window.MishiBehavior.create({cat:$('cat'),room:$('room'),fx:$('fx'),appearance:()=>{const f=M.getFur(state.fur);return {fur:f.base,dark:f.dark,light:f.light,eye:M.getEyes(state.eyes).color,pattern:state.pattern};},yarn:document.querySelector('.scene-yarn'),reduced,isBusy:()=>game!==null||sleepPending||messBusy,stats:()=>state.stats,name:()=>state.name,say,sound,mess:visibleMess,tired:autoSleep}):null;
   const save=()=>{try {localStorage.setItem(KEY,M.serialize(state));} catch (_) { /* private storage unavailable */ }};
   function say(text){const el=$('message');if(el)el.textContent=text;}
   function sound(freq=450) {
@@ -24,6 +26,7 @@
     const r=$('room'),W=r.clientWidth||1,H=r.clientHeight||1,s=Math.max(W/360,H/400);
     return {x:(W-360*s)/2+p.x*s,y:H-400*s+p.y*s};
   }
+  function litterLevel(){return litterShown==null?(state.litter||0):Math.min(litterShown,state.litter||0);}
   function renderMess(){
     const layer=$('mess');if(!layer)return;
     const vis=visibleMess(), ids=new Set(vis.map(m=>String(m.id)));
@@ -41,9 +44,12 @@
       }
       const p=scenePx(m);el.style.left=p.x+'px';el.style.top=p.y+'px';
     }
-    const badge=$('mess-count');
-    if(badge){badge.textContent=String(vis.length);badge.hidden=!vis.length;}
-    $('clean')?.setAttribute('aria-label',vis.length?'Limpiar '+(vis.length===1?'la suciedad':vis.length+' suciedades'):'Bañar a '+state.name);
+    const lit=litterLevel(), lb=$('litter-btn'), room=$('room');
+    for(const k of [1,2,3])room?.classList.toggle('litter-'+k,lit>=k);
+    if(lb){const q=scenePx({x:88,y:362});lb.style.left=q.x+'px';lb.style.top=q.y+'px';lb.setAttribute('aria-label',lit?'Limpiar el arenero':'Arenero limpio');lb.classList.toggle('is-full',lit>=3);}
+    const count=vis.length+(lit>=2?1:0), badge=$('mess-count');
+    if(badge){badge.textContent=String(count);badge.hidden=!count;}
+    $('clean')?.setAttribute('aria-label',count?'Limpiar '+(count===1?'la suciedad':count+' suciedades'):'Bañar a '+state.name);
   }
   function render(){
     if($('cat-name'))$('cat-name').textContent=state.name;
@@ -77,12 +83,14 @@
     const root=document.documentElement.style;
     root.setProperty('--fur',M.getFur(state.fur).base);root.setProperty('--fur-dark',M.getFur(state.fur).dark);
     root.setProperty('--fur-light',M.getFur(state.fur).light);root.setProperty('--eye',M.getEyes(state.eyes).color);
-    $('room')?.classList.toggle('is-night',state.sleeping);
+    const isNight=night(Date.now());
+    $('room')?.classList.toggle('is-night',isNight);
+    $('room')?.classList.toggle('is-dim',state.sleeping||isNight);
     $('room')?.classList.toggle('has-food',state.stats.hunger<65);
     document.documentElement.classList.toggle('reduce-motion',state.settings.reducedMotion);
     renderMess();
   }
-  const reasons={sleeping:'Está durmiendo. Despiértalo primero.',cooldown:'Espera un momento.',full:'Ya ha comido suficiente.',alreadyClean:'Ya está limpito.',notTired:'Todavía tiene mucha energía.',tired:'Necesita descansar antes de jugar.',hungry:'Necesita comer antes de jugar.',locked:'Ese pelaje se desbloquea subiendo de nivel.',gameActive:'Termina el juego primero.',empty:'Escribe un nombre.',invalid:'Esa opción no está disponible.',noMess:'No hay nada que limpiar.'};
+  const reasons={sleeping:'Está durmiendo. Despiértalo primero.',cooldown:'Espera un momento.',full:'Ya ha comido suficiente.',alreadyClean:'Ya está limpito.',notTired:'Todavía tiene mucha energía.',tired:'Necesita descansar antes de jugar.',hungry:'Necesita comer antes de jugar.',locked:'Ese pelaje se desbloquea subiendo de nivel.',gameActive:'Termina el juego primero.',empty:'Escribe un nombre.',invalid:'Esa opción no está disponible.',noMess:'No hay nada que limpiar.',litterClean:'El arenero ya está limpio.'};
   function apply(result, message, frequency){
     if(!result.ok){say(reasons[result.reason]||'Ahora no se puede.');render();return false;}
     state=result.state;say(message);render();save();if(frequency)sound(frequency);return true;
@@ -91,21 +99,27 @@
   const lifeText={
     poop:n=>'¡'+n+' ha hecho caca! Tócala para limpiarla.',
     vomit:n=>'¡Ay! '+n+' ha comido demasiado y ha vomitado. Límpialo.',
-    hairball:n=>n+' ha echado una bola de pelo. Báñalo más a menudo.'
+    hairball:n=>n+' ha echado una bola de pelo. Báñalo más a menudo.',
+    litter:n=>(state.litter||0)>=3?n+' ha usado el arenero y ya está lleno. ¡Límpialo o lo hará fuera!':n+' ha usado su arenero. ¡Buen gato!'
   };
   function handleEvents(events, live){
     if(!events||!events.length)return;
     if(!live||!B||reduced()){
       const types=[...new Set(events.map(e=>e.type))];
-      say(live?lifeText[types[0]](state.name):'Mientras no estabas, '+state.name+' ha ensuciado la habitación. Toca para limpiar.');
+      say(live?lifeText[types[0]](state.name):types.every(t=>t==='litter')?'Mientras no estabas, '+state.name+' ha usado su arenero.':'Mientras no estabas, '+state.name+' ha ensuciado la habitación. Toca para limpiar.');
       return;
     }
-    for(const e of events){pendingMess.add(e.id);messQueue.push(e);}
+    for(const e of events){if(e.type==='litter'){if(litterShown==null)litterShown=(state.litter||0)-1;}else pendingMess.add(e.id);messQueue.push(e);}
     renderMess();nextMess();
   }
   function nextMess(){
     if(messBusy)return;
     const e=messQueue.shift();if(!e)return;
+    if(e.type==='litter'){
+      messBusy=true;let done=false;
+      const fin=()=>{if(done)return;done=true;litterShown=messQueue.some(q=>q.type==='litter')?Math.min(state.litter||0,(litterShown||0)+1):null;render();say(lifeText.litter(state.name));sound(340);setTimeout(()=>{messBusy=false;nextMess();},1200);};
+      say(state.name+' va a su arenero…');B.react('litter',fin);setTimeout(fin,9000);return;
+    }
     const m=(state.mess||[]).find(x=>x.id===e.id);
     if(!m){pendingMess.delete(e.id);nextMess();return;}
     messBusy=true;
@@ -119,15 +133,25 @@
   function cleanOne(id){
     if(game)return;
     const m=(state.mess||[]).find(x=>x.id===id);
-    const now=Date.now();state=M.tick(state,now,{holdEvents:true}).state;
+    const now=Date.now();state=T(state,now,{holdEvents:true}).state;
     if(apply(M.cleanMess(state,now,id),'¡Recogido! '+state.name+' te lo agradece.',640)&&B){if(m)B.sparkleAt(m);B.react('tidy');}
+  }
+  function cleanLitter(){
+    if(game||messBusy)return;
+    const now=Date.now();state=T(state,now,{holdEvents:true}).state;
+    if(apply(M.cleanLitter(state,now),'¡Arenero limpio! '+state.name+' lo usará encantado.',640)&&B){B.sparkleAt({x:88,y:352});B.react('tidy');}
   }
   function cleanAll(){
     const list=visibleMess();
-    const now=Date.now();state=M.tick(state,now,{holdEvents:true}).state;
+    const now=Date.now();state=T(state,now,{holdEvents:true}).state;
     for(const m of (state.mess||[]))pendingMess.delete(m.id);
-    messQueue.length=0;
-    if(apply(M.cleanMess(state,now,null),list.length>1?'¡Todo recogido! La habitación huele mucho mejor.':'¡Recogido! '+state.name+' te lo agradece.',640)&&B){for(const m of list)B.sparkleAt(m);B.react('tidy');}
+    messQueue.length=0;litterShown=null;
+    let ok=false;
+    if((state.litter||0)>=2){const r=M.cleanLitter(state,now);if(r.ok){state=r.state;ok=true;B?.sparkleAt({x:88,y:352});}}
+    if(state.mess&&state.mess.length){const r=M.cleanMess(state,now,null);if(r.ok){state=r.state;ok=true;}}
+    if(!ok){apply(M.cleanMess(state,now,null),'');return;}
+    say(list.length>1?'¡Todo recogido! La habitación huele mucho mejor.':'¡Recogido! '+state.name+' te lo agradece.');render();save();sound(640);
+    if(B){for(const m of list)B.sparkleAt(m);B.react('tidy');}
   }
   /* Cuidados */
   function sleepWalk(startMsg,endMsg){
@@ -136,19 +160,19 @@
     if(!check.ok){say(reasons[check.reason]||'Ahora no se puede.');return false;}
     if(!B||reduced())return apply(check,endMsg,520);
     sleepPending=true;say(startMsg);
-    B.react('sleep',()=>{sleepPending=false;const t=Date.now();state=M.tick(state,t,{holdEvents:true}).state;if(!state.sleeping)apply(M.toggleSleep(state,t),endMsg,520);});
+    B.react('sleep',()=>{sleepPending=false;const t=Date.now();state=T(state,t,{holdEvents:true}).state;if(!state.sleeping)apply(M.toggleSleep(state,t),endMsg,520);});
     return true;
   }
   function autoSleep(){
     if(state.sleeping||game||sleepPending||messBusy)return false;
-    state=M.tick(state,Date.now(),{holdEvents:true}).state;
-    if(state.stats.energy>=18)return false;
+    state=T(state,Date.now(),{holdEvents:true}).state;
+    if(state.stats.energy>=(night(Date.now())?60:18))return false;
     return sleepWalk(state.name+' bosteza y se va a su alfombra…',state.name+' se ha quedado dormido solito. Shh…');
   }
   function doAction(action){
     if(sleepPending||game)return false;
-    if(action==='clean'&&visibleMess().length){cleanAll();return true;}
-    const now=Date.now();state=M.tick(state,now,{holdEvents:true}).state;
+    if(action==='clean'&&(visibleMess().length||litterLevel()>=2)){cleanAll();return true;}
+    const now=Date.now();state=T(state,now,{holdEvents:true}).state;
     const wasSleeping=state.sleeping;
     if(action==='sleep'&&!wasSleeping)return sleepWalk(state.name+' busca su sitio en la alfombra…','A dormir. Volverá con más energía.');
     const result=action==='sleep'?M.toggleSleep(state,now):M[action](state,now);
@@ -202,7 +226,7 @@
   function startGame(){
     if(game)return;
     if(sleepPending||messBusy){say('Espera un momento.');return;}
-    state=M.tick(state,Date.now(),{holdEvents:true}).state;
+    state=T(state,Date.now(),{holdEvents:true}).state;
     const result=M.startGame(state);if(!result.ok){say(reasons[result.reason]||'Ahora no puede jugar.');render();return;}
     state=result.state;save();
     game={id:result.gameId,score:0,seconds:20,yarn:floorSpot(),throwId:0,bonus:false,timer:null};
@@ -229,8 +253,9 @@
     if(doAction('pet')){$('cat').classList.remove('petted');void $('cat').offsetWidth;$('cat').classList.add('petted');}
   });
   $('play')?.addEventListener('click',()=>{if(game){closeGame();say('Guardamos el ovillo para otro rato.');}else startGame();});
+  $('litter-btn')?.addEventListener('click',e=>{e.stopPropagation();if(game){throwYarn(floorSpot());return;}cleanLitter();});
   $('room')?.addEventListener('click',e=>{
-    if(e.target.closest('#cat,#game,.mess-item,#game-target'))return;
+    if(e.target.closest('#cat,#game,.mess-item,#game-target,#litter-btn'))return;
     if(game&&B){throwYarn(B.toScene(e.clientX,e.clientY));return;}
     if(!B)return;
     if(state.sleeping){say('Shh… '+state.name+' está durmiendo.');return;}
@@ -246,7 +271,7 @@
   $('sound')?.addEventListener('change',e=>{soundOn=e.target.checked;render();if(soundOn)sound(580);else if(audio){audio.close();audio=null;}});
   function pause(){B?.stop();if(game){closeGame();say('El juego se ha pausado. Vuelve a jugar cuando quieras.');}save();if(audio){audio.close();audio=null;}}
   function resume(){
-    const r=M.tick(state,Date.now(),{offline:true});state=r.state;
+    const r=T(state,Date.now(),{offline:true});state=r.state;
     render();save();handleEvents(r.events,false);
     if(B){B.layout();B.start();}
     renderMess();
@@ -258,10 +283,10 @@
   window.addEventListener('pagehide',pause);
   function live(){
     if(document.hidden)return;
-    const r=M.tick(state,Date.now(),{holdEvents:sleepPending||messBusy||game!==null});
+    const r=T(state,Date.now(),{holdEvents:sleepPending||messBusy||game!==null});
     state=r.state;
     if(r.wokeUp){say(state.name+' se ha despertado con energía.');B?.react('wake');}
-    if(B&&!reduced())for(const e of r.events||[])pendingMess.add(e.id);
+    if(B&&!reduced())for(const e of r.events||[]){if(e.type==='litter'){if(litterShown==null)litterShown=(state.litter||0)-1;}else pendingMess.add(e.id);}
     render();save();handleEvents(r.events,true);
   }
   setInterval(live,5000);

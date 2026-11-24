@@ -27,7 +27,9 @@
     },
     cooldowns: { pet: 600, petXp: 4000, feed: 1200, clean: 1200, sleep: 800 },
     mess: { max: 4, digestMs: 2 * MINUTE, vomitDelayMs: 8000, hairballEveryMs: 15 * MINUTE, hairballHygiene: 25, overfedHunger: 85,
-      hygienePerMin: 0.2, moodPerMin: 0.2, area: { minX: 84, maxX: 292, minY: 330, maxY: 386 } },
+      hygienePerMin: 0.2, moodPerMin: 0.2, area: { minX: 132, maxX: 292, minY: 330, maxY: 386 } },
+    litter: { max: 3, moodPerMin: 0.15 },
+    night: { from: 23, to: 7, energyFactor: 1.4 },
     game: { durationMs: 20000, countdownMs: 3000, minEnergy: 15, minHunger: 10, maxScore: 120, energyCost: 12, hungerCost: 6, hygieneCost: 5 }
   });
 
@@ -84,7 +86,8 @@
       settings: { reducedMotion: false },
       gameCounter: 0, activeGameId: null,
       cooldowns: { pet: 0, petXp: 0, feed: 0, clean: 0, sleep: 0 },
-      mess: [], messCounter: 0, poopDueAt: null, vomitDueAt: null, lastHairballAt: 0
+      mess: [], messCounter: 0, poopDueAt: null, vomitDueAt: null, lastHairballAt: 0,
+      litter: 0
     };
   }
 
@@ -127,6 +130,7 @@
     d.poopDueAt = due(raw.poopDueAt, CONFIG.mess.digestMs);
     d.vomitDueAt = due(raw.vomitDueAt, CONFIG.mess.vomitDelayMs);
     d.lastHairballAt = Math.min(num(raw.lastHairballAt, 0), now);
+    d.litter = clampInt(raw.litter, 0, CONFIG.litter.max, 0);
     return d;
   }
 
@@ -146,10 +150,12 @@
     return { ok: true, error: null, state: sanitizeState(parsed, now) };
   }
 
-  function applyStep(s, minutes) {
+  function applyStep(s, minutes, night) {
     var r = s.sleeping ? CONFIG.rates.asleep : CONFIG.rates.awake;
     var st = s.stats;
     var moodDelta = r.mood;
+    var energyRate = r.energy < 0 && night ? r.energy * CONFIG.night.energyFactor : r.energy;
+    if (num(s.litter, 0) >= CONFIG.litter.max) { moodDelta -= CONFIG.litter.moodPerMin; }
     if (!s.sleeping) {
       if (st.hunger < 25) { moodDelta -= 0.6; }
       if (st.hygiene < 25) { moodDelta -= 0.3; }
@@ -158,7 +164,7 @@
     var messes = s.mess ? s.mess.length : 0;
     if (messes) { moodDelta -= CONFIG.mess.moodPerMin * messes; st.hygiene = clamp(st.hygiene - CONFIG.mess.hygienePerMin * messes * minutes, 0, 100); }
     st.hunger = clamp(st.hunger + r.hunger * minutes, 0, 100);
-    st.energy = clamp(st.energy + r.energy * minutes, 0, 100);
+    st.energy = clamp(st.energy + energyRate * minutes, 0, 100);
     st.hygiene = clamp(st.hygiene + r.hygiene * minutes, 0, 100);
     st.mood = clamp(st.mood + moodDelta * minutes, 0, 100);
   }
@@ -177,8 +183,8 @@
     var remaining = applied;
     while (remaining > 0) {
       var step = Math.min(remaining, MINUTE);
-      applyStep(s, step / MINUTE);
-      if (s.sleeping && s.stats.energy >= 100) { s.sleeping = false; s.sleepStartedAt = null; res.wokeUp = true; }
+      applyStep(s, step / MINUTE, !!opts.night);
+      if (s.sleeping && s.stats.energy >= 100 && !opts.night) { s.sleeping = false; s.sleepStartedAt = null; res.wokeUp = true; }
       remaining -= step;
     }
     if (opts.offline) {
@@ -215,8 +221,14 @@
     }
     if (isNum(s.poopDueAt) && now >= s.poopDueAt) {
       s.poopDueAt = null;
-      m = addMess(s, 'poop', now, rng);
-      if (m) { events.push({ type: 'poop', id: m.id }); }
+      if (num(s.litter, 0) < CONFIG.litter.max) {
+        s.litter = num(s.litter, 0) + 1;
+        events.push({ type: 'litter', litter: s.litter });
+      } else {
+        m = addMess(s, 'poop', now, rng);
+        s.stats.mood = clamp(s.stats.mood - 3, 0, 100);
+        if (m) { events.push({ type: 'poop', id: m.id }); }
+      }
     }
     if (!isNum(s.vomitDueAt) && s.stats.hygiene < C.hairballHygiene && now - num(s.lastHairballAt, 0) >= C.hairballEveryMs) {
       s.lastHairballAt = now;
@@ -239,6 +251,23 @@
     var r = success(state.level, s, 2 * removed);
     r.removed = removed;
     return r;
+  }
+
+  function cleanLitter(state, now) {
+    if (!num(state.litter, 0)) { return fail(state, 'litterClean'); }
+    var s = prepare(state);
+    var n = s.litter;
+    s.litter = 0;
+    s.stats.mood = clamp(s.stats.mood + 2 * n, 0, 100);
+    s.totals.cleans += 1;
+    var r = success(state.level, s, 2 + n);
+    r.removed = n;
+    return r;
+  }
+
+  function isNight(now) {
+    var h = new Date(num(now, Date.now())).getHours();
+    return CONFIG.night.from > CONFIG.night.to ? (h >= CONFIG.night.from || h < CONFIG.night.to) : (h >= CONFIG.night.from && h < CONFIG.night.to);
   }
 
   function addXp(s, amount) {
@@ -452,7 +481,7 @@
     serialize: serialize,
     deserialize: deserialize,
     tick: tick,
-    pet: pet, feed: feed, clean: clean, cleanMess: cleanMess,
+    pet: pet, feed: feed, clean: clean, cleanMess: cleanMess, cleanLitter: cleanLitter, isNight: isNight,
     sleep: sleep, wake: wake, toggleSleep: toggleSleep,
     canStartGame: canStartGame, startGame: startGame, finishGame: finishGame, abortGame: abortGame, gameRewards: gameRewards,
     rename: rename,

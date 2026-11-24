@@ -2,7 +2,7 @@
 Run with the local preview listening on 127.0.0.1:8787.
 """
 from pathlib import Path
-import json
+import json, time
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'build/test-results'; OUT.mkdir(parents=True,exist_ok=True)
@@ -18,12 +18,32 @@ with sync_playwright() as p:
  page.goto('http://127.0.0.1:8787',wait_until='networkidle')
  page.evaluate("localStorage.clear()"); page.reload(wait_until='networkidle')
  # 1) mess made while away appears straight away
- patch(page,{'top':{'poopDueAt':1}})
+ # 0) litter box: used while away, fills, tap to clean
+ patch(page,{'top':{'poopDueAt':1,'litter':1}})
+ assert page.locator('#mess .mess-item').count()==0,'Poop should go to the litter box'
+ assert 'litter-2' in page.get_attribute('#room','class'),page.get_attribute('#room','class')
+ assert page.locator('#mess-count').inner_text()=='1','Dirty litter box should show in badge'
+ page.screenshot(path=str(OUT/'mishi-litter.png'))
+ page.locator('#litter-btn').click(); page.wait_for_timeout(200)
+ assert 'litter-1' not in page.get_attribute('#room','class'),'Tapping litter box did not clean it'
+ assert page.evaluate("JSON.parse(localStorage.getItem('mishi.v1')).litter")==0
+ # 0b) live: the cat walks to the box and squats there
+ patch(page,{'top':{'poopDueAt':int(time.time()*1000)+3000,'litter':0}})
+ poses=set()
+ for _ in range(60):
+  page.wait_for_timeout(250); poses.add(page.get_attribute('#cat','data-pose'))
+  if 'litter-1' in (page.get_attribute('#room','class') or ''): break
+ assert 'poop' in poses and 'litter-1' in page.get_attribute('#room','class'),('Litter box not used live',poses)
+ page.wait_for_timeout(2500)
+ # 1) full box: mess made while away lands on the floor
+ patch(page,{'top':{'poopDueAt':1,'litter':3}})
  assert page.locator('#mess .mess-poop').count()==1,'Poop made while away not shown'
- assert page.locator('#mess-count').is_visible() and page.locator('#mess-count').inner_text()=='1'
+ assert page.locator('#mess-count').is_visible() and page.locator('#mess-count').inner_text()=='2'
  page.screenshot(path=str(OUT/'mishi-poop.png'))
  page.locator('#mess .mess-poop').click(); page.wait_for_timeout(200)
  assert page.locator('#mess .mess-item').count()==0,'Tapping poop did not clean it'
+ assert page.locator('#mess-count').inner_text()=='1'
+ page.locator('#litter-btn').click(); page.wait_for_timeout(200)
  assert not page.locator('#mess-count').is_visible()
  # 2) live: overfeed -> vomit acted out, then poop later; Limpiar cleans all
  patch(page,{'stats':{'hunger':88}})
@@ -37,11 +57,11 @@ with sync_playwright() as p:
  assert 'is-vomit' in seen,('Cat did not act out vomiting',seen,page.locator('#message').inner_text(),page.evaluate("localStorage.getItem('mishi.v1')")[-260:])
  assert page.locator('#mess .mess-vomit').count()==1,'Vomit did not appear'
  page.screenshot(path=str(OUT/'mishi-vomit.png'))
- patch(page,{'top':{'poopDueAt':1}})
+ patch(page,{'top':{'poopDueAt':1,'litter':3}})
  n=page.locator('#mess .mess-item').count(); assert n>=2,n
  page.locator('#clean').click(); page.wait_for_timeout(200)
  assert page.locator('#mess .mess-item').count()==0,'Limpiar did not clean the room'
- saved=page.evaluate("JSON.parse(localStorage.getItem('mishi.v1')).mess.length"); assert saved==0,saved
+ saved=page.evaluate("JSON.parse(localStorage.getItem('mishi.v1'))"); assert len(saved['mess'])==0 and saved['litter']==0,(saved['mess'],saved['litter'])
  assert not errors, errors
  print(json.dumps({'life':'PASS','seen':sorted(seen),'errors':errors}))
  browser.close()

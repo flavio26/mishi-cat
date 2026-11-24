@@ -1,4 +1,9 @@
-# Verificación de Mishi 1.2.0
+# Verificación de Mishi 1.3.0
+
+## Comprobado el 24/11/2026 (1.3.0, gato pixel-art y arenero)
+- `node tests/model_life.test.js`: 15 pruebas (arenero, caca fuera si está lleno, limpiar arenero, noche).
+- UI (Chrome headless): browser_smoke (canvas pintado), behavior_smoke (poses `data-pose`), life_smoke (arenero en vivo y al volver), offline_origin.
+- Pendiente: prueba en móvil físico.
 
 ## Comprobado el 24/11/2026 (1.2.0, vida propia)
 

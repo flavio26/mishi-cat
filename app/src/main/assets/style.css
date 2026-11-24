@@ -81,20 +81,42 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sky-night, .food { opacity: 0; transition: opacity .6s; }
 .night-shade { opacity: 0; transition: opacity .8s; pointer-events: none; }
 .room.is-night .sky-night { opacity: 1; }
-.room.is-night .night-shade { opacity: .28; }
+.room.is-dim .night-shade { opacity: .28; }
+.room.is-night .night-shade { opacity: .36; }
 .room.has-food .food { opacity: 1; }
 .cloud { animation: drift 14s ease-in-out infinite alternate; }
 
 .cat {
-  position: absolute; left: 50%; bottom: 4%; z-index: 2;
-  width: min(42%, 190px); aspect-ratio: 200 / 260; padding: 0; border: 0; background: none;
-  border-radius: 40px; touch-action: none; -webkit-tap-highlight-color: transparent;
-  transform: translateX(-39%) scale(var(--depth, 1)); transform-origin: 39% 97%;
-  transition: left var(--walk-ms, 0ms) linear, bottom var(--walk-ms, 0ms) linear, transform var(--walk-ms, 0ms) linear;
+  position: absolute; left: 50%; bottom: 4%; z-index: 2; width: 192px; height: 144px;
+  padding: 0; border: 0; background: none; border-radius: 30%; touch-action: none; -webkit-tap-highlight-color: transparent;
+  transform: translateX(-47%) scale(var(--depth, 1)); transform-origin: 47% 92%;
 }
+.cat-motion { position: absolute; inset: 0; display: block; transform-origin: 47% 100%; }
+.cat-canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+.cat::after { content: ""; position: absolute; left: 22%; right: 28%; bottom: 5%; height: 6%; border-radius: 50%; background: rgba(59, 42, 34, .16); z-index: -1; }
+.cat[data-pose="sleep"]::after, .cat[data-pose="loaf"]::after { left: 18%; right: 26%; }
+.zzz { position: absolute; left: 58%; top: 18%; font: 800 18px/1 system-ui, sans-serif; color: #6A5548; pointer-events: none; }
+.zzz i { position: absolute; font-style: normal; opacity: 0; }
+.zzz i:nth-child(2) { left: 10px; top: -12px; font-size: 22px; }
+.zzz i:nth-child(3) { left: 22px; top: -26px; font-size: 26px; }
+.cat[data-facing="left"] .zzz { left: 26%; }
+.cat.is-sleeping .zzz i { animation: zfloat 3s ease-in-out infinite; }
+.cat.is-sleeping .zzz i:nth-child(2) { animation-delay: .6s; }
+.cat.is-sleeping .zzz i:nth-child(3) { animation-delay: 1.2s; }
+.scene-yarn.is-rolling { transform-box: fill-box; transform-origin: 50% 50%; animation: roll 1.1s ease-out; }
+@keyframes roll { 50% { transform: translateX(-18px) rotate(-200deg); } }
+/* Arenero */
+.litter-dirt ellipse, .litter-dirt path { opacity: 0; transition: opacity .5s; }
+.room.litter-1 .ld1, .room.litter-2 .ld2, .room.litter-3 .ld3, .room.litter-3 .ld-stink { opacity: 1; }
+.room.litter-3 .ld-stink { animation: stink 2.4s ease-in-out infinite; }
+.litter-btn {
+  position: absolute; z-index: 3; width: max(56px, calc(var(--s, 1) * 70px)); height: max(44px, calc(var(--s, 1) * 40px));
+  transform: translate(-50%, -70%); padding: 0; border: 0; background: none; border-radius: 12px;
+}
+.litter-btn.is-full { animation: wobble 2.4s ease-in-out infinite; }
+@keyframes wobble { 0%, 90%, 100% { rotate: 0deg; } 94% { rotate: -3deg; } 97% { rotate: 3deg; } }
 .fx-layer { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .fx-sparkle { color: #8DBBC7; }
-.cat-svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .hint {
   position: absolute; z-index: 5; left: 10px; right: 10px; top: 10px; margin: 0; padding: 8px 12px;
   background: rgba(255, 249, 240, .92); border-radius: 12px; font-size: .9rem; text-align: center;
@@ -102,109 +124,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .hint:empty { display: none; }
 
-.cat { --fur: #E08A45; --fur-dark: #A85A26; --fur-light: #F7D9B8; --eye: #7FA35A; --dirt: 0; }
-.coat-naranja, .coat-ginger { --fur: #E08A45; --fur-dark: #A85A26; --fur-light: #F7D9B8; }
-.coat-gris { --fur: #A3A7AB; --fur-dark: #666C72; --fur-light: #E6E7E8; }
-.coat-crema, .coat-cream { --fur: #E8CFA3; --fur-dark: #B39268; --fur-light: #FBF1DF; }
-.coat-negro, .coat-charcoal { --fur: #45403F; --fur-dark: #1F1C1B; --fur-light: #78706D; }
-.coat-chocolate { --fur: #8A5A3C; --fur-dark: #583520; --fur-light: #C9A07F; }
-.coat-nieve { --fur: #F5F1EA; --fur-dark: #BDB3A6; --fur-light: #FFFFFF; }
-.eyes-ambar { --eye: #D69A2D; } .eyes-azul { --eye: #5E8FB8; }
-.dirty-1 { --dirt: .45; } .dirty-2 { --dirt: .85; }
-
-.fur { fill: var(--fur); }
-.fur-dark, .fur-dark * { fill: var(--fur-dark); }
-.fur-light { fill: var(--fur-light); }
-.fur-stroke { stroke: var(--fur); }
-.outline { stroke: var(--fur-dark); stroke-width: 2.5; stroke-linejoin: round; }
-.ear-in { fill: #F2A9A0; }
-.iris { fill: var(--eye); }
-.blush { fill: #F2A9A0; opacity: .55; }
-.line { fill: none; stroke: #3B2A22; stroke-width: 2.6; stroke-linecap: round; }
-.whisker { stroke: #6A5548; stroke-width: 1.6; stroke-linecap: round; opacity: .75; }
-.stripe { fill: none; stroke: var(--fur-dark); stroke-width: 5; stroke-linecap: round; }
-.toe { stroke: var(--fur-dark); stroke-width: 1.6; stroke-linecap: round; }
-.sock { fill: #FFF8F0; }
-.dirt { fill: #7E5E40; opacity: var(--dirt); transition: opacity .6s; }
-.zzz { font: 800 22px system-ui, sans-serif; fill: #6A5548; opacity: 0; }
-.bubbles circle { fill: rgba(255, 255, 255, .55); stroke: #8DBBC7; stroke-width: 2; opacity: 0; }
-
-.pat-atigrado, .pat-manchas, .pat-calcetines { display: none; }
-.pattern-atigrado .pat-atigrado, .pattern-manchas .pat-manchas, .pattern-calcetines .pat-calcetines { display: inline; }
-
-.eyes-closed, .eyes-happy { display: none; }
-.cat-body, .cat-head, .cat-tail, .eyes-open, .zzz text, .bubbles circle { transform-box: fill-box; }
-.cat-body { transform-origin: 50% 100%; animation: breathe 4s ease-in-out infinite; }
-.cat-tail { transform-origin: 0% 100%; animation: sway 3.2s ease-in-out infinite alternate; }
-.cat-head { transform-origin: 50% 90%; transition: transform .6s ease; }
-.eyes-open { transform-origin: 50% 50%; animation: blink 5.5s infinite; }
-
-.cat.petted .cat-head { animation: tilt .7s ease; }
-.cat.petted .eyes-open, .cat.mood-happy.petted .eyes-open { display: none; }
-.cat.petted .eyes-happy { display: inline; }
-.cat.mood-sad .mouth { d: path("M168 213q10-7 20 0"); }
-.cat.is-eating .cat-head { animation: nod .45s ease-in-out 3; }
-.cat.is-cleaning .bubbles circle { animation: bubble 1.4s ease-out; }
-.cat.is-cleaning .bubbles circle:nth-child(2n) { animation-delay: .25s; }
-.cat.is-sleeping .cat-head { transform: translateY(10px) rotate(-7deg); }
-.cat.is-sleeping .eyes-open, .cat.is-sleeping .eyes-happy { display: none; }
-.cat.is-sleeping .eyes-closed { display: inline; }
-.cat.is-sleeping .cat-body { animation-duration: 6s; }
-.cat.is-sleeping .cat-tail { animation-duration: 7s; }
-.cat.is-sleeping .zzz { opacity: 1; }
-.cat.is-sleeping .zzz text { animation: zfloat 3s ease-in-out infinite; }
-.cat.is-sleeping .zzz text:nth-child(2) { animation-delay: .6s; font-size: 26px; }
-.cat.is-sleeping .zzz text:nth-child(3) { animation-delay: 1.2s; font-size: 30px; }
-
-/* Paseo y reacciones */
-.cat-motion, .paw, .cat-shadow, .pupils, .tongue, .scene-yarn { transform-box: fill-box; }
-.cat-motion { transform-origin: 50% 100%; }
-.cat-shadow { transform-origin: 50% 50%; }
-.tongue { display: none; }
-.cat.is-walking .cat-motion { animation: walk-bob .44s ease-in-out infinite; }
-.cat.is-walking .paw-l { animation: step .44s ease-in-out infinite; }
-.cat.is-walking .paw-r { animation: step .44s ease-in-out -.22s infinite; }
-.cat.is-walking .cat-tail { animation-duration: .9s; }
-.cat.is-running .cat-motion, .cat.is-running .paw-l, .cat.is-running .paw-r { animation-duration: .3s; }
-.cat.is-running .paw-r { animation-delay: -.15s; }
-.cat.is-hop .cat-motion { animation: hop .7s cubic-bezier(.3, .7, .4, 1); }
-.cat.is-hop .cat-shadow { animation: shadow-hop .7s ease-in-out; }
-.cat.is-stretch .cat-motion { animation: stretch 1.6s ease-in-out; }
-.cat.is-stretch .eyes-open { display: none; }
-.cat.is-stretch .eyes-closed { display: inline; }
-.cat.is-look .cat-head { animation: look 2.4s ease-in-out; }
-.cat.is-look .pupils { animation: pupils 2.4s ease-in-out; }
-.cat.is-pounce .cat-motion { animation: pounce .9s ease-in-out; }
-.cat.is-pounce .paw-l { animation: bat .45s ease-in-out 2; }
-.cat.is-eating .cat-motion { animation: lean-eat 2.3s ease-in-out; }
-.cat.is-eating .cat-head { animation: nod .5s ease-in-out 4; }
-.cat.is-eating .eyes-open, .cat.is-licking .eyes-open { display: none; }
-.cat.is-eating .eyes-happy, .cat.is-licking .eyes-happy { display: inline; }
-.cat.is-eating .tongue, .cat.is-licking .tongue { display: inline; }
-.cat.is-licking .tongue { animation: lick .25s ease-in-out 4; transform-origin: 50% 0; }
-.cat.is-purring .cat-motion { animation: purr .12s linear infinite; }
-.cat.is-purring .eyes-open { display: none; }
-.cat.is-purring .eyes-happy { display: inline; }
-.cat.is-purring .cat-tail { animation-duration: .8s; }
-.cat.is-cleaning .cat-motion { animation: shake .5s ease-in-out 3; }
-.cat.mood-happy .cat-tail { animation-duration: 1.8s; }
-.cat.mood-sad .cat-head { transform: translateY(6px) rotate(-3deg); }
-.cat.is-sleeping .cat-motion { transform: translateY(16px) scale(1.06, .9); }
-.scene-yarn.is-rolling { transform-origin: 50% 50%; animation: roll 1.1s ease-out; }
-@keyframes walk-bob { 0%, 100% { transform: translateY(0) rotate(2deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
-@keyframes step { 0%, 100% { transform: translate(-4px, 0); } 50% { transform: translate(7px, -10px); } }
-@keyframes hop { 0% { transform: scale(1.06, .9); } 35% { transform: translateY(-48px) scale(.95, 1.06); } 70% { transform: translateY(0) scale(1.08, .9); } 100% { transform: none; } }
-@keyframes shadow-hop { 35% { transform: scale(.65); opacity: .5; } }
-@keyframes stretch { 25%, 70% { transform: scale(1.14, .84); } }
-@keyframes look { 15%, 40% { transform: rotate(-12deg) translateX(-6px); } 60%, 85% { transform: rotate(10deg) translateX(6px); } }
-@keyframes pupils { 15%, 40% { transform: translateX(-4px); } 60%, 85% { transform: translateX(4px); } }
-@keyframes pounce { 35% { transform: translateY(8px) scale(1.06, .86); } 60% { transform: translate(22px, -34px) rotate(10deg); } 100% { transform: none; } }
-@keyframes bat { 50% { transform: translate(16px, -44px) rotate(-20deg); } }
-@keyframes lean-eat { 15%, 85% { transform: translate(10px, 10px) rotate(8deg); } }
-@keyframes lick { 50% { transform: scaleY(1.5); } }
-@keyframes purr { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(1.2px); } }
-@keyframes shake { 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
-@keyframes roll { 50% { transform: translateX(-18px) rotate(-200deg); } }
 
 .fx-heart { position: absolute; width: 28px; height: 28px; color: var(--terra); pointer-events: none; animation: heart 1s ease-out forwards; }
 
@@ -279,38 +198,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   box-shadow: var(--shadow); animation: say 1.6s ease-out forwards;
 }
 @keyframes say { 0% { opacity: 0; translate: 0 8px; } 15%, 75% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: 0 -10px; } }
-.cat.is-poop .cat-motion { animation: squat 1.8s ease-in-out; }
-.cat.is-poop .cat-tail { animation: tail-up 1.8s ease-in-out; }
-.cat.is-poop .eyes-open, .cat.is-vomit .eyes-open, .cat.is-disgust .eyes-open, .cat.is-groom .eyes-open { display: none; }
-.cat.is-poop .eyes-closed, .cat.is-vomit .eyes-closed, .cat.is-disgust .eyes-closed, .cat.is-groom .eyes-closed { display: inline; }
-.cat.is-scratch .paw-r { animation: scratch .25s ease-in-out 4; }
-.cat.is-vomit .cat-motion { animation: heave .63s ease-in-out 3; }
-.cat.is-vomit .cat-head { animation: retch .63s ease-in-out 3; }
-.cat.is-vomit .tongue, .cat.is-meow .tongue, .cat.is-groom .tongue { display: inline; }
-.cat.is-sniff .cat-head { animation: sniff 1.3s ease-in-out; }
-.cat.is-disgust .cat-head { animation: shake-head .3s ease-in-out 3; }
-.cat.is-meow .cat-head { animation: meow .9s ease-in-out; }
-.cat.is-groom .cat-head { animation: groom 1s ease-in-out 2; }
-.cat.is-groom .paw-l { animation: groom-paw 1s ease-in-out 2; }
-@keyframes squat { 15%, 85% { transform: translateY(12px) scale(1.06, .88); } 45% { transform: translateY(14px) scale(1.08, .86); } }
-@keyframes tail-up { 15%, 85% { transform: rotate(-28deg); } }
-@keyframes scratch { 50% { transform: translate(14px, -4px) rotate(18deg); } }
-@keyframes heave { 40% { transform: translate(4px, 10px) scale(1.04, .92); } 70% { transform: translate(2px, -4px); } }
-@keyframes retch { 40% { transform: translateY(18px) rotate(6deg); } }
-@keyframes sniff { 20%, 80% { transform: translateY(16px) rotate(8deg); } 35%, 65% { transform: translateY(18px) rotate(6deg); } }
-@keyframes shake-head { 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
-@keyframes meow { 30%, 70% { transform: translateY(-6px) rotate(-8deg); } }
-@keyframes groom { 30%, 70% { transform: translateY(10px) rotate(-14deg); } }
-@keyframes groom-paw { 30%, 70% { transform: translate(6px, -70px) rotate(-30deg); } }
 .btn { min-height: 48px; padding: 10px 18px; border-radius: 14px; border: 2px solid var(--terra); background: var(--terra); color: #fff; font-weight: 700; }
 .btn-ghost { background: transparent; color: var(--terra-dark); }
 
-@keyframes breathe { 50% { transform: scaleY(1.018); } }
-@keyframes sway { from { transform: rotate(-6deg); } to { transform: rotate(7deg); } }
-@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
-@keyframes tilt { 30% { transform: rotate(-6deg); } 70% { transform: rotate(4deg); } }
-@keyframes nod { 50% { transform: translateY(8px) rotate(3deg); } }
-@keyframes bubble { 0% { opacity: 0; transform: translateY(10px) scale(.6); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-30px) scale(1.1); } }
 @keyframes zfloat { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
 @keyframes drift { to { transform: translateX(28px); } }
 @keyframes heart { from { opacity: 1; transform: translateY(0) scale(.8); } to { opacity: 0; transform: translateY(-60px) scale(1.2); } }
@@ -319,13 +209,13 @@ html.reduce-motion .cat { transition: none !important; }
 html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
   animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
 }
-html.reduce-motion .eyes-open, html.reduce-motion .cat-body, html.reduce-motion .cat-tail, html.reduce-motion .cloud { animation: none !important; }
-html.reduce-motion .cat.is-sleeping .zzz text { animation: none !important; opacity: 1; }
+html.reduce-motion .cloud { animation: none !important; }
+html.reduce-motion .cat.is-sleeping .zzz i { animation: none !important; opacity: 1; }
 html.reduce-motion .fx-heart { animation: fade .8s linear forwards !important; }
 @keyframes fade { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-  .cat.is-sleeping .zzz text { opacity: 1; }
+  .cat.is-sleeping .zzz i { opacity: 1; }
 }
 
 @media (max-height: 680px) {

@@ -20,9 +20,12 @@ with sync_playwright() as p:
  page.wait_for_timeout(150)
  assert page.get_attribute('#cat','data-pose') in ('walk','trot','run'), page.get_attribute('#cat','data-pose')
  page.screenshot(path=str(OUT/'mishi-walking.png'))
- page.wait_for_timeout(3500)
- after_call=left(page); assert after_call < start-20, (start,after_call)
  assert page.get_attribute('#cat','data-facing')=='left', 'Cat should face left when walking left'
+ # The brain may start its own walk once it arrives, so track the furthest-left point reached.
+ low=left(page)
+ for _ in range(35):
+  page.wait_for_timeout(100); low=min(low,left(page))
+ assert low < start-20, (start,low)
  page.locator('#pet').click(); page.wait_for_timeout(200)
  assert 'is-purring' in page.get_attribute('#cat','class'); assert page.locator('#fx .fx-heart').count()>0, 'No hearts when petted'
  page.evaluate("(()=>{const k='mishi.v1';const s=JSON.parse(localStorage.getItem(k));s.stats.hunger=30;localStorage.setItem(k,JSON.stringify(s));})()")

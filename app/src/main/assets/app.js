@@ -13,8 +13,38 @@
   const pendingMess=new Set(), messQueue=[];
   const motionQuery=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
   const reduced=()=>Boolean(state.settings.reducedMotion||motionQuery?.matches);
+  /* Cerebro: memoria que aprende (sitios, horas, personalidad), guardada aparte */
+  const BR=window.MishiBrain, BKEY='mishi.brain.v1';
+  let brain=null;
+  if(BR){try{brain=BR.sanitize(JSON.parse(localStorage.getItem(BKEY)||'null'));}catch(_){brain=BR.create();}if(!brain.born)brain.born=Date.now();}
+  const saveBrain=()=>{if(brain){try{localStorage.setItem(BKEY,JSON.stringify(brain));}catch(_){}}};
+  let seekTimer=null;
+  function teach(kind,ctx){
+    if(!BR||!brain)return;
+    const cur=B?B.current():{};
+    const msg=BR.learn(brain,kind,{act:cur.act,spot:cur.spot,hour:new Date().getHours(),now:Date.now(),...(ctx||{})});
+    saveBrain();renderBrain();
+    if(msg&&kind!=='explored'&&kind!=='ignored')setTimeout(()=>say(state.name+' '+msg+'.'),1600);
+  }
+  function decide(){
+    if(!BR||!brain)return {act:'explore',spot:null};
+    const d=BR.decide(brain,{stats:state.stats,hour:new Date().getHours(),night:night(Date.now()),messCount:visibleMess().length,sinceInteract:Date.now()-(brain.lastInteract||brain.born)});
+    saveBrain();return d;
+  }
+  function renderBrain(){
+    const el=$('brain-info');if(!el||!BR||!brain)return;
+    const sm=BR.summary(brain),pct=v=>Math.round(v*100);
+    el.innerHTML='';
+    const row=(k,v)=>{const d=document.createElement('div');d.className='brain-row';const a=document.createElement('span');a.textContent=k;const b=document.createElement('b');b.textContent=v;d.append(a,b);el.appendChild(d);};
+    row('Etapa',sm.stage+' ('+sm.exp+')');row('Carácter','Más '+sm.trait);
+    for(const [k,n] of [['curious','Curioso'],['playful','Juguetón'],['affection','Cariñoso'],['lazy','Dormilón']]){
+      const d=document.createElement('div');d.className='brain-bar';d.innerHTML='<span></span><i><b></b></i>';d.firstChild.textContent=n;d.querySelector('b').style.width=pct(sm.traits[k])+'%';el.appendChild(d);
+    }
+    row('Sitio favorito',sm.favourite);if(sm.hour>=0)row('Te espera','sobre las '+sm.hour+' h');
+    if(sm.learned.length){const u=document.createElement('ul');u.className='brain-learned';for(const t of sm.learned){const li=document.createElement('li');li.textContent=t;u.appendChild(li);}el.appendChild(u);}
+  }
   const visibleMess=()=>(state.mess||[]).filter(m=>!pendingMess.has(m.id));
-  const B=window.MishiBehavior&&$('cat')&&$('room')?window.MishiBehavior.create({cat:$('cat'),room:$('room'),fx:$('fx'),appearance:()=>{const f=M.getFur(state.fur);return {fur:f.base,dark:f.dark,light:f.light,eye:M.getEyes(state.eyes).color,pattern:state.pattern};},yarn:document.querySelector('.scene-yarn'),reduced,isBusy:()=>game!==null||sleepPending||messBusy,stats:()=>state.stats,name:()=>state.name,say,sound,mess:visibleMess,tired:autoSleep}):null;
+  const B=window.MishiBehavior&&$('cat')&&$('room')?window.MishiBehavior.create({cat:$('cat'),room:$('room'),fx:$('fx'),appearance:()=>{const f=M.getFur(state.fur);return {fur:f.base,dark:f.dark,light:f.light,eye:M.getEyes(state.eyes).color,pattern:state.pattern};},yarn:document.querySelector('.scene-yarn'),reduced:()=>Boolean(state.settings.reducedMotion),decide,onExplored:sp=>teach('explored',{spot:sp}),onMess:sp=>teach('mess',{spot:sp}),onSeek:()=>{clearTimeout(seekTimer);seekTimer=setTimeout(()=>{seekTimer=null;teach('ignored',{act:'seek'});},9000);},isBusy:()=>game!==null||sleepPending||messBusy,stats:()=>state.stats,name:()=>state.name,say,sound,mess:visibleMess,tired:autoSleep}):null;
   const save=()=>{try {localStorage.setItem(KEY,M.serialize(state));} catch (_) { /* private storage unavailable */ }};
   function say(text){const el=$('message');if(el)el.textContent=text;}
   function sound(freq=450) {
@@ -177,7 +207,9 @@
     if(action==='sleep'&&!wasSleeping)return sleepWalk(state.name+' busca su sitio en la alfombra…','A dormir. Volverá con más energía.');
     const result=action==='sleep'?M.toggleSleep(state,now):M[action](state,now);
     const messages={feed:result.overfed?'¡Uf! Ya estaba lleno… le puede sentar mal.':'¡Qué rico! Va corriendo a su cuenco.',pet:'Ronronea. Le encanta estar contigo.',clean:'¡Pelito limpio y suave!',sleep:wasSleeping?'Ya está despierto y listo para jugar.':'A dormir. Volverá con más energía.'};
+    const cur=B?B.current():{};
     const ok=apply(result,messages[action],action==='pet'?320:520);
+    if(ok&&(action==='pet'||action==='feed')){if(seekTimer&&action==='pet'){clearTimeout(seekTimer);seekTimer=null;}teach(action,{act:cur.act,spot:cur.spot});}
     if(ok&&B)B.react(action==='sleep'?'wake':action);
     return ok;
   }
@@ -221,6 +253,7 @@
     if(!game)return;
     const id=game.id,score=game.score;closeGame(false);
     const result=M.finishGame(state,id,score);
+    if(score)teach('play');
     if(apply(result,(score?'¡'+state.name+' atrapó el ovillo '+score+' '+(score===1?'punto':'puntos')+'!':state.name+' no atrapó nada esta vez.')+(result.newRecord?' ¡Nuevo récord!':''),660)&&B)B.react('celebrate');
   }
   function startGame(){
@@ -292,5 +325,5 @@
   setInterval(live,5000);
   window.addEventListener('resize',()=>{B?.layout();renderMess();if(game)placeYarn(game.yarn);});
   if(B){B.layout();B.start();}
-  render();save();handleEvents(bootEvents,false);
+  render();save();renderBrain();handleEvents(bootEvents,false);
 })();

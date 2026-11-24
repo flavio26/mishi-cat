@@ -12,7 +12,7 @@ assert manifest.find('application').attrib.get(ns+'allowBackup')=='false'
 version=manifest.attrib[ns+'versionName']
 with zipfile.ZipFile(root/f'dist/Mishi-{version}.apk') as z:
  names=z.namelist()
- for required in ['AndroidManifest.xml','classes.dex','resources.arsc','assets/index.html','assets/app.js','assets/model.js','assets/behavior.js','assets/style.css']:
+ for required in ['AndroidManifest.xml','classes.dex','resources.arsc','assets/index.html','assets/app.js','assets/model.js','assets/behavior.js','assets/brain.js','assets/sprite.js','assets/style.css']:
   assert required in names,required
  assert not any(re.search(r'\.(jks|keystore|pem|key)$',n) for n in names)
  for n in names:

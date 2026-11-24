@@ -1,4 +1,9 @@
-# Verificación de Mishi 1.3.0
+# Verificación de Mishi 1.3.1
+
+## Comprobado el 24/11/2026 (1.3.1, cerebro y movimiento autónomo)
+- `node tests/brain.test.js`: 9 pruebas (decisiones según necesidades, refuerzo, sitios y horas aprendidas, saneado de guardados).
+- behavior_smoke adaptado al movimiento autónomo; sonda de movimiento: se mueve ~10/29 s (15/29 s con animaciones reducidas del sistema, antes 0).
+- Pendiente: prueba en móvil físico.
 
 ## Comprobado el 24/11/2026 (1.3.0, gato pixel-art y arenero)
 - `node tests/model_life.test.js`: 15 pruebas (arenero, caca fuera si está lleno, limpiar arenero, noche).

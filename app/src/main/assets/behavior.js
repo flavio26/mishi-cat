@@ -14,6 +14,7 @@
     'is-poop': { pose: 'poop' }, 'is-vomit': { pose: 'vomit' }, 'is-sniff': { pose: 'eat', eyes: 'open' },
     'is-disgust': { pose: 'stand', eyes: 'closed', shake: 1 }, 'is-meow': { pose: 'sit', mouth: true },
     'is-scratch': { pose: 'pounce', scratch: 1 }, 'is-groom': { pose: 'groom' }, 'is-watch': { pose: 'sit', look: 'up' },
+    'is-knead': { pose: 'loaf', eyes: 'happy', purr: 1 },
   };
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const pick = list => list[Math.floor(Math.random() * list.length)];
@@ -183,6 +184,7 @@
     function rollYarn() { if (!yarn) return; yarn.classList.remove('is-rolling'); void yarn.getBoundingClientRect(); yarn.classList.add('is-rolling'); }
     function randomSpot() { const b = bounds(); return { x: b.minX + Math.random() * (b.maxX - b.minX), y: b.minY + Math.random() * (b.maxY - b.minY) }; }
     function lock(ms) { lockedUntil = Date.now() + (o.reduced() ? 200 : ms); }
+    function nearestSpot() { const S = BS(); let best = null, d = 1e9; for (const k of Object.keys(S)) { const q = Math.hypot(S[k].x - pos.x, S[k].y - pos.y); if (q < d) { d = q; best = k; } } return d < 60 ? best : null; }
     const sleeping = () => cat.classList.contains('is-sleeping');
     const walking = () => Boolean(walk);
 
@@ -194,41 +196,98 @@
       } });
     }
 
+    let plan = null, planToken = 0;
+    const BS = () => (window.MishiBrain ? window.MishiBrain.SPOTS : SPOTS);
+    const jitter = (p, r) => ({ x: p.x + (Math.random() - 0.5) * r, y: p.y + (Math.random() - 0.5) * r * 0.4 });
+    function finish(token, short) { if (token !== planToken) return; plan = null; schedule(short ? 600 : 1200); }
+    function seq(token, steps) {
+      const next = () => {
+        if (token !== planToken || !running) return;
+        const step = steps.shift();
+        if (!step) { finish(token, true); return; }
+        step(next);
+      };
+      next();
+    }
+    const go = (p, speed, opt) => next => walkTo(p, { speed, ...(opt || {}), then: next });
+    const doAct = (cls, ms) => next => setAct(cls, ms, next);
+    const wait = ms => next => { actTimer = setTimeout(next, o.reduced() ? 50 : ms); };
+    const fn = f => next => { f(); next(); };
+    function execute(d) {
+      const token = ++planToken, S = BS(), st = o.stats();
+      plan = { act: d.act, spot: d.spot, start: Date.now() };
+      cat.dataset.mind = d.act;
+      const target = d.spot && S[d.spot] ? jitter(S[d.spot], 16) : randomSpot();
+      const steps = [];
+      switch (d.act) {
+        case 'explore':
+          steps.push(go(target, 0.6 + Math.random() * 0.5));
+          if (Math.random() < 0.4) steps.push(doAct('is-sniff', 1100));
+          steps.push(fn(() => { rest = pick(['sit', 'stand', 'sit', 'loaf']); if (o.onExplored) o.onExplored(d.spot); }), wait(800 + Math.random() * 1600));
+          break;
+        case 'patrol':
+          steps.push(go(target, 0.8), doAct('is-look', 1600), go(randomSpot(), 0.9), fn(() => { rest = 'stand'; }), wait(600));
+          break;
+        case 'watch':
+          steps.push(go(S.window, 0.8), fn(() => { setFace(1); }), doAct('is-watch', 2600),
+            fn(() => { if (Math.random() < 0.5) { bubble(pick(['¡Un pájaro!', '¡Mrrr!', '¿Eh?'])); o.say(name() + ' mira por la ventana. ¡Ha visto un pájaro!'); } }),
+            doAct('is-watch', 2200), fn(() => { rest = 'sit'; }));
+          break;
+        case 'hunt':
+          steps.push(go({ x: S.yarn.x - 34, y: S.yarn.y }, 1.4), fn(() => setFace(1)), doAct('is-pounce', 800), fn(rollYarn),
+            go({ x: S.yarn.x + 30, y: S.yarn.y - 6 }, 1.8), doAct('is-pounce', 700), fn(() => { rest = 'sit'; }));
+          break;
+        case 'nap':
+          steps.push(go(target, 0.55), doAct('is-stretch', 1500), fn(() => { rest = 'loaf'; o.say(name() + ' se acurruca en ' + (S[d.spot] ? S[d.spot].label : 'el suelo') + '.'); }), wait(5000 + Math.random() * 5000));
+          break;
+        case 'knead':
+          steps.push(go(target, 0.7), doAct('is-knead', 2600), fn(() => { rest = 'loaf'; }), wait(1500));
+          break;
+        case 'groom':
+          steps.push(doAct('is-groom', 2400));
+          if (st.hygiene < 45) steps.push(fn(() => o.say(name() + ' se lame el pelo. Le vendría bien un baño.')));
+          break;
+        case 'beg':
+          steps.push(go(S.bowl, 1.1), fn(() => { setFace(1); rest = 'sit'; meow(); o.say(name() + ' maúlla junto a su cuenco. ¡Tiene hambre!'); }), wait(2500));
+          break;
+        case 'seek':
+          steps.push(go(jitter(S.you, 60), 1.1), fn(() => { setFace(Math.random() < 0.5 ? -1 : 1); rest = 'sit'; meow(pick(['¿Miau?', '¡Miau!', 'Mrrau'])); o.say(name() + ' viene a buscarte. ¿Le haces caso?'); if (o.onSeek) o.onSeek(); }), wait(4500));
+          break;
+        case 'zoomies':
+          for (let k = 0; k < 4; k++) steps.push(go(randomSpot(), 2));
+          steps.push(doAct('is-hop', 700), fn(() => { rest = 'stand'; o.say('¡' + name() + ' corre como loco por la casa!'); }));
+          break;
+        case 'scratch':
+          steps.push(go(target, 0.9), fn(() => setFace(d.spot === 'plant' ? -1 : 1)), doAct('is-scratch', 1800), fn(() => { rest = 'sit'; }));
+          break;
+        case 'sniff': {
+          const mess = o.mess ? o.mess() : [];
+          if (mess.length) steps.push(next => sniffAt(pick(mess), () => { o.say(name() + ' arruga la nariz. ¡Hay que limpiar eso!'); if (o.onMess) o.onMess(d.spot); next(); }));
+          break;
+        }
+        default:
+          steps.push(fn(() => { rest = pick(['sit', 'loaf', 'stand']); }), wait(1500 + Math.random() * 1500));
+      }
+      seq(token, steps);
+    }
     function idle() {
       if (!running) return;
-      if (o.isBusy() || document.hidden || sleeping() || walking() || Date.now() < lockedUntil) { schedule(); return; }
-      const st = o.stats(), r = Math.random(), mess = o.mess ? o.mess() : [];
-      if (st.energy < 60 && o.tired && r < 0.7 && o.tired()) { schedule(); return; }
-      if (st.hunger < 30 && r < 0.5) {
-        lock(4500);
-        walkTo(SPOTS.bowl, { then: () => { setFace(1); rest = 'sit'; meow(); o.say(name() + ' maúlla junto a su cuenco. ¡Tiene hambre!'); } });
-      } else if (mess.length && r < 0.4) {
-        sniffAt(pick(mess), () => o.say(name() + ' arruga la nariz. ¡Hay que limpiar eso!'));
-      } else if (st.hygiene < 45 && r < 0.35) {
-        lock(2400); setAct('is-groom', 2200); o.say(name() + ' se lame el pelo. Le vendría bien un baño.');
-      } else if (st.mood < 28 && r < 0.45) {
-        meow('Miau…'); o.say(name() + ' está triste. Juega con él o acarícialo.');
-      } else if (st.energy < 25) {
-        if (r < 0.5) { rest = 'loaf'; setAct('is-stretch', 1600); } else walkTo(randomSpot(), { speed: 0.55, then: () => { rest = 'loaf'; } });
-      } else if (r < 0.34) walkTo(randomSpot(), { speed: 0.7 + Math.random() * 0.7, then: () => { rest = pick(['sit', 'sit', 'stand', 'loaf']); } });
-      else if (r < 0.42) setAct('is-hop', 700);
-      else if (r < 0.52) setAct('is-stretch', 1600);
-      else if (r < 0.62) setAct('is-look', 2400);
-      else if (r < 0.70) setAct('is-groom', 2000);
-      else if (r < 0.76) { rest = pick(['sit', 'loaf', 'stand']); }
-      else if (r < 0.84) meow();
-      else { lock(3500); walkTo({ x: SPOTS.yarn.x - 34, y: SPOTS.yarn.y }, { speed: 1.5, then: () => { setFace(1); setAct('is-pounce', 900); rollYarn(); } }); }
-      schedule();
+      if (o.isBusy() || document.hidden || sleeping() || walking() || plan || act || Date.now() < lockedUntil) { schedule(); return; }
+      if (o.tired && o.tired()) { schedule(); return; }
+      const d = o.decide ? o.decide() : { act: pick(['explore', 'patrol', 'groom', 'rest', 'hunt']), spot: null };
+      execute(d);
     }
-    function schedule() {
+    function schedule(ms) {
       clearTimeout(idleTimer);
-      if (running && !o.reduced()) idleTimer = setTimeout(idle, 2600 + Math.random() * 4200);
+      if (running) idleTimer = setTimeout(idle, ms != null ? ms : 900 + Math.random() * 1300);
     }
+    function interrupt() { planToken++; plan = null; }
 
     return {
       layout() { size(); pos = fit(pos); place(pos); lastKey = ''; ensureLoop(); if (!frame || o.reduced()) try { draw(now()); } catch (_) { /* sprite unavailable */ } },
       start() { running = true; ensureLoop(); schedule(); },
-      stop() { running = false; clearTimeout(idleTimer); haltWalk(); clearAct(); },
+      stop() { running = false; interrupt(); clearTimeout(idleTimer); haltWalk(); clearAct(); },
+      current: () => (plan ? { act: plan.act, spot: plan.spot } : { act: null, spot: nearestSpot() }),
       toPx, toScene, visibleFloor, walkTo, meow, bubble,
       act: setAct,
       setRest(p) { rest = p; },
@@ -236,7 +295,7 @@
       position: () => ({ ...pos }),
       sparkleAt(p) { const q = toPx(p); fxAt('i-sparkle', q.x, q.y, 4, 'fx-sparkle'); },
       react(kind, done, at) {
-        lockedUntil = 0; schedule();
+        lockedUntil = 0; interrupt(); schedule(2500);
         if (kind === 'pet') { haltWalk(); rest = 'sit'; setAct('is-purring', 1600); burst('i-heart', 3); }
         else if (kind === 'feed') { lock(4000); walkTo({ x: SPOTS.bowl.x, y: SPOTS.bowl.y }, { speed: 1.6, then: () => { setFace(1); setAct('is-eating', 2300, () => { rest = 'sit'; setAct('is-licking', 1000); }); } }); }
         else if (kind === 'clean') { haltWalk(); setAct('is-cleaning', 1500); burst('i-sparkle', 4); }
@@ -272,7 +331,7 @@
         else if (done) done();
       },
       chase(p, onCatch) {
-        lockedUntil = 0;
+        lockedUntil = 0; interrupt();
         haltWalk();
         const side = pos.x <= p.x ? -1 : 1;
         walkTo({ x: p.x + side * 30, y: p.y }, { speed: 1.9, then: () => {
@@ -281,7 +340,7 @@
       },
       call(clientX, clientY) {
         const p = toScene(clientX, clientY);
-        lockedUntil = 0;
+        lockedUntil = 0; interrupt();
         walkTo(p, { speed: 1.5, then: () => { rest = 'sit'; setAct('is-look', 1400); } });
         schedule();
       },
